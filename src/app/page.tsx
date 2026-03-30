@@ -1,65 +1,159 @@
+import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
+import GlowButton from "@/components/ui/GlowButton";
+import TestimonialSlider from "@/components/site/TestimonialSlider";
+import HeroExperiment from "@/components/site/HeroExperiment";
+import RepairIssueQuickForm from "@/components/site/RepairIssueQuickForm";
+import JsonLd from "@/components/seo/JsonLd";
+import Reveal from "@/components/ui/Reveal";
+import { siteConfig } from "@/content/site";
+import { buildMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildMetadata({
+  title: siteConfig.title,
+  description: siteConfig.description,
+  path: "/",
+});
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="pb-8">
+      <section className="pt-14 pb-8 md:pt-18">
+        <Reveal>
+          <HeroExperiment />
+        </Reveal>
+      </section>
+
+      <section className="py-8">
+        <Reveal className="container-base grid gap-4 md:grid-cols-3" delay={0.05}>
+          {[
+            ["Book Online in 60 Seconds", "Simple form and WhatsApp flow designed to get your quote quickly."],
+            ["Walk-in or Collection Advice", "We support urgent walk-ins and help you choose the quickest route."],
+            ["Warranty-backed Work", "Quality parts, careful fitting, and practical after-care guidance."],
+          ].map(([title, text]) => (
+            <article key={title} className="premium-card rounded-2xl p-5">
+              <h2 className="text-base font-bold tracking-tight">{title}</h2>
+              <p className="mt-2 text-sm text-muted">{text}</p>
+            </article>
+          ))}
+        </Reveal>
+      </section>
+
+      <section className="py-14">
+        <Reveal className="container-base" delay={0.08}>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Everything your device needs</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Phone & Tablet Repair", "Screen, battery, charging port, camera, and water damage support."],
+              ["Buy & Sell Devices", "Fair trade-in offers and straightforward upgrade options."],
+              ["Accessories & Protection", "Cases, tempered glass, chargers, and reliable daily essentials."],
+              ["Perfumes & Lifestyle", "Popular fragrances and thoughtful in-store lifestyle picks."],
+            ].map(([title, text]) => (
+              <article key={title} className="premium-card rounded-2xl p-5">
+                <h3 className="font-bold tracking-tight">{title}</h3>
+                <p className="mt-2 text-sm text-muted">{text}</p>
+              </article>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      <section className="py-14">
+        <Reveal className="container-base glass-panel rounded-4xl p-6 md:p-8" delay={0.1}>
+          <div className="grid items-center gap-6 md:grid-cols-2">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Repair by issue</h2>
+              <p className="mt-3 text-sm text-muted">
+                Pick your issue, enter phone number, and submit. We will get back quickly with a quote.
+              </p>
+              <div className="mt-4">
+                <RepairIssueQuickForm />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Image
+                src="/images/repair-tech.jpg"
+                alt="Technician repairing smartphone components"
+                width={600}
+                height={600}
+                className="rounded-2xl border border-white/60 object-cover"
+              />
+              <Image
+                src="/images/cracked-screen-closeup.jpg"
+                alt="Cracked smartphone screen closeup before repair"
+                width={600}
+                height={600}
+                className="rounded-2xl border border-white/60 object-cover"
+              />
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      <section className="py-14">
+        <Reveal className="container-base" delay={0.1}>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Local customers, real feedback</h2>
+          <div className="mt-6">
+            <TestimonialSlider />
+          </div>
+        </Reveal>
+      </section>
+
+      <section className="py-6">
+        <Reveal className="container-base" delay={0.12}>
+          <h2 className="text-2xl font-bold tracking-tight">Supported Ecosystems</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {[
+              ["/icons/apple.svg", "Apple Devices"],
+              ["/icons/google-maps.svg", "Easy to Find"],
+              ["/icons/whatsapp.svg", "WhatsApp Fast Contact"],
+            ].map(([src, label]) => (
+              <article key={label} className="premium-card flex items-center gap-3 rounded-2xl p-4">
+                <Image src={src} alt={label} width={36} height={36} />
+                <p className="font-semibold tracking-tight">{label}</p>
+              </article>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      <section className="py-10">
+        <Reveal className="container-base rounded-4xl border border-red-200/80 bg-linear-to-r from-red-50 via-white to-white p-8 shadow-[0_30px_80px_rgba(203,30,39,0.12)]" delay={0.14}>
+          <h2 className="text-3xl font-bold tracking-tight">Need help now?</h2>
+          <p className="mt-2 max-w-2xl text-muted">
+            Visit us on Greenwich High Road or message us for a quick quote with fast turnaround.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <GlowButton href="/contact">WhatsApp Quote</GlowButton>
+            <Link
+              href={siteConfig.contact.mapsHref}
+              className="glass-panel rounded-full px-5 py-3 text-sm font-semibold"
+              target="_blank"
+            >
+              Directions
+            </Link>
+          </div>
+        </Reveal>
+      </section>
+
+      <JsonLd
+        id="localbusiness-home"
+        data={{
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          name: siteConfig.name,
+          url: siteConfig.domain,
+          telephone: siteConfig.contact.phoneDisplay,
+          image: `${siteConfig.domain}/images/shopexterior.png`,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: siteConfig.address.line1,
+            addressLocality: siteConfig.address.city,
+            addressCountry: siteConfig.address.country,
+          },
+        }}
+      />
     </div>
   );
 }
