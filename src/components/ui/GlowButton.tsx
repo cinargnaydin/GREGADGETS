@@ -9,13 +9,15 @@ type GlowButtonProps = {
   href: string;
   children: ReactNode;
   className?: string;
+  target?: string;
+  rel?: string;
 };
 
-export default function GlowButton({ href, children, className }: GlowButtonProps) {
+export default function GlowButton({ href, children, className, target, rel }: GlowButtonProps) {
   const reducedMotion = useReducedMotion();
 
   return (
-    <Link href={href} className="inline-block">
+    <Link href={href} className="inline-block" target={target} rel={rel ?? (target === "_blank" ? "noopener noreferrer" : undefined)}>
       <motion.span
         className={clsx(
           "relative inline-flex items-center justify-center overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white shadow-glow",

@@ -27,8 +27,23 @@ export default function ContactPage() {
           <div className="premium-card rounded-2xl p-5">
             <p className="font-semibold">Address</p>
             <p className="mt-1 text-sm text-muted">
-              {siteConfig.address.line1}, {siteConfig.address.area}, {siteConfig.address.city}
+              {siteConfig.address.line1}, {siteConfig.address.city} {siteConfig.address.area}
             </p>
+          </div>
+          <div className="premium-card rounded-2xl p-5">
+            <p className="font-semibold">Phone</p>
+            <ul className="mt-2 space-y-1 text-sm text-muted">
+              <li>
+                <Link href={siteConfig.contact.phoneHref} className="hover:text-foreground transition-colors">
+                  {siteConfig.contact.phoneDisplay}
+                </Link>
+              </li>
+              <li>
+                <Link href={siteConfig.contact.phone2Href} className="hover:text-foreground transition-colors">
+                  {siteConfig.contact.phone2Display}
+                </Link>
+              </li>
+            </ul>
           </div>
           <div className="premium-card rounded-2xl p-5">
             <p className="font-semibold">Opening Hours</p>
@@ -42,12 +57,12 @@ export default function ContactPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href={siteConfig.contact.phoneHref} className="glass-panel rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5">
-              Call Now
+              Call {siteConfig.contact.phoneDisplay}
             </Link>
-            <Link href={siteConfig.contact.whatsappHref} target="_blank" className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white shadow-glow">
+            <Link href={siteConfig.contact.whatsappHref} target="_blank" rel="noopener noreferrer" className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white shadow-glow">
               WhatsApp
             </Link>
-            <Link href={siteConfig.contact.mapsHref} target="_blank" className="glass-panel rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5">
+            <Link href={siteConfig.contact.mapsHref} target="_blank" rel="noopener noreferrer" className="glass-panel rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5">
               Directions
             </Link>
           </div>
@@ -60,12 +75,13 @@ export default function ContactPage() {
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
           name: siteConfig.name,
-          telephone: siteConfig.contact.phoneDisplay,
+          telephone: [siteConfig.contact.phoneDisplay, siteConfig.contact.phone2Display],
           email: siteConfig.contact.email,
           address: {
             "@type": "PostalAddress",
             streetAddress: siteConfig.address.line1,
             addressLocality: siteConfig.address.city,
+            postalCode: siteConfig.address.area,
             addressCountry: siteConfig.address.country,
           },
           openingHoursSpecification: siteConfig.hours.map((item) => ({

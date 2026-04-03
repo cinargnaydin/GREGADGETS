@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import GlowButton from "@/components/ui/GlowButton";
 import QuoteForm from "@/components/site/QuoteForm";
 import JsonLd from "@/components/seo/JsonLd";
 import { siteConfig } from "@/content/site";
@@ -47,7 +49,24 @@ export default function RepairServicesPage() {
               ))}
             </div>
           </div>
-          <QuoteForm />
+          <div className="space-y-4">
+            <div className="glass-panel rounded-2xl p-5">
+              <p className="font-semibold">Ready to book?</p>
+              <p className="mt-1 text-sm text-muted">Secure your slot online or send a quick WhatsApp message for a quote.</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <GlowButton href="/book">Book Appointment</GlowButton>
+                <Link
+                  href={siteConfig.contact.whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
+                >
+                  WhatsApp Quote
+                </Link>
+              </div>
+            </div>
+            <QuoteForm />
+          </div>
         </div>
       </div>
       <JsonLd

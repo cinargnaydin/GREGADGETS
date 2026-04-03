@@ -5,17 +5,19 @@ export const siteConfig = {
   description:
     "Trusted local gadget experts on Greenwich High Road for same-day repairs, honest pricing, and curated accessories.",
   address: {
-    line1: "Greenwich High Road",
+    line1: "267 Greenwich High Rd",
     city: "London",
-    area: "Greenwich Town Centre",
+    area: "SE10 8NB",
     country: "UK",
   },
   contact: {
-    phoneDisplay: "020 0000 0000",
-    phoneHref: "tel:+442000000000",
-    whatsappHref: "https://wa.me/442000000000",
+    phoneDisplay: "07340 327305",
+    phoneHref: "tel:+447340327305",
+    phone2Display: "07562 720358",
+    phone2Href: "tel:+447562720358",
+    whatsappHref: "https://wa.me/447562720358",
     email: "hello@greenwichgadgets.com",
-    mapsHref: "https://maps.google.com/?q=Greenwich+High+Road+London",
+    mapsHref: "https://maps.google.com/?q=267+Greenwich+High+Rd+London+SE10+8NB",
   },
   hours: [
     { day: "Mon-Fri", hours: "09:30 - 19:00" },

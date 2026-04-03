@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import GlowButton from "@/components/ui/GlowButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { buildMetadata } from "@/lib/seo";
 
@@ -41,6 +43,15 @@ export default function FaqPage() {
               <p className="mt-2 text-sm text-muted">{faq.a}</p>
             </article>
           ))}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <GlowButton href="/book">Book Now</GlowButton>
+          <Link
+            href="/contact"
+            className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
+          >
+            Contact Us
+          </Link>
         </div>
       </div>
       <JsonLd

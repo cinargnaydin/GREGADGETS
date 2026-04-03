@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import GlowButton from "@/components/ui/GlowButton";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -30,6 +32,15 @@ export default function AboutPage() {
               <p className="mt-2 text-sm text-muted">{text}</p>
             </article>
           ))}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <GlowButton href="/book">Book a Repair</GlowButton>
+          <Link
+            href="/contact"
+            className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
+          >
+            Contact Us
+          </Link>
         </div>
       </div>
     </div>

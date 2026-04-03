@@ -5,7 +5,6 @@ import GlowButton from "@/components/ui/GlowButton";
 import TestimonialSlider from "@/components/site/TestimonialSlider";
 import HeroExperiment from "@/components/site/HeroExperiment";
 import RepairIssueQuickForm from "@/components/site/RepairIssueQuickForm";
-import BookingWidget from "@/components/booking/BookingWidget";
 import JsonLd from "@/components/seo/JsonLd";
 import Reveal from "@/components/ui/Reveal";
 import { siteConfig } from "@/content/site";
@@ -16,6 +15,29 @@ export const metadata: Metadata = buildMetadata({
   description: siteConfig.description,
   path: "/",
 });
+
+const serviceCards = [
+  {
+    title: "Phone & Tablet Repair",
+    text: "Screen, battery, charging port, camera, and water damage support.",
+    href: "/repair-services",
+  },
+  {
+    title: "Buy & Sell Devices",
+    text: "Fair trade-in offers and straightforward upgrade options.",
+    href: "/buy-sell",
+  },
+  {
+    title: "Accessories & Protection",
+    text: "Cases, tempered glass, chargers, and reliable daily essentials.",
+    href: "/shop",
+  },
+  {
+    title: "Perfumes & Lifestyle",
+    text: "Popular fragrances and thoughtful in-store lifestyle picks.",
+    href: "/shop",
+  },
+];
 
 export default function Home() {
   return (
@@ -45,16 +67,14 @@ export default function Home() {
         <Reveal direction="right" className="container-base" delay={0.08}>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Everything your device needs</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              ["Phone & Tablet Repair", "Screen, battery, charging port, camera, and water damage support."],
-              ["Buy & Sell Devices", "Fair trade-in offers and straightforward upgrade options."],
-              ["Accessories & Protection", "Cases, tempered glass, chargers, and reliable daily essentials."],
-              ["Perfumes & Lifestyle", "Popular fragrances and thoughtful in-store lifestyle picks."],
-            ].map(([title, text]) => (
-              <article key={title} className="premium-card rounded-2xl p-5">
-                <h3 className="font-bold tracking-tight">{title}</h3>
-                <p className="mt-2 text-sm text-muted">{text}</p>
-              </article>
+            {serviceCards.map(({ title, text, href }) => (
+              <Link key={title} href={href} className="group block">
+                <article className="premium-card rounded-2xl p-5 transition-transform group-hover:-translate-y-1">
+                  <h3 className="font-bold tracking-tight">{title}</h3>
+                  <p className="mt-2 text-sm text-muted">{text}</p>
+                  <p className="mt-3 text-xs font-semibold text-brand-red-dark group-hover:underline">Learn more →</p>
+                </article>
+              </Link>
             ))}
           </div>
         </Reveal>
@@ -101,28 +121,17 @@ export default function Home() {
         </Reveal>
       </section>
 
-      <section className="py-14">
-        <Reveal direction="up" className="container-base" delay={0.12}>
-          <div className="max-w-3xl mx-auto mb-8 text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Schedule Your Visit</h2>
-            <p className="mt-3 text-muted max-w-xl mx-auto">
-              Choose a convenient time from our available slots below to secure your repair fast. No upfront cost.
-            </p>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <BookingWidget />
-          </div>
-        </Reveal>
-      </section>
-
       <section className="py-10">
         <Reveal direction="up" className="container-base rounded-4xl border border-red-200/80 bg-linear-to-r from-red-50 via-white to-white p-8 shadow-[0_30px_80px_rgba(203,30,39,0.12)]" delay={0.14}>
-          <h2 className="text-3xl font-bold tracking-tight">Need help now?</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Ready to get started?</h2>
           <p className="mt-2 max-w-2xl text-muted">
-            Visit us on Greenwich High Road or message us for a quick quote with fast turnaround.
+            Book your repair slot online in under a minute, or message us for a quick quote.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <GlowButton href="/contact">WhatsApp Quote</GlowButton>
+            <GlowButton href="/book">Book Appointment</GlowButton>
+            <GlowButton href={siteConfig.contact.whatsappHref} target="_blank">
+              WhatsApp Quote
+            </GlowButton>
             <Link
               href={siteConfig.contact.mapsHref}
               className="glass-panel rounded-full px-5 py-3 text-sm font-semibold"
@@ -147,6 +156,7 @@ export default function Home() {
             "@type": "PostalAddress",
             streetAddress: siteConfig.address.line1,
             addressLocality: siteConfig.address.city,
+            postalCode: siteConfig.address.area,
             addressCountry: siteConfig.address.country,
           },
         }}

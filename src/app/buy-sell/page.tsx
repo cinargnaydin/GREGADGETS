@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import GlowButton from "@/components/ui/GlowButton";
+import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -29,6 +32,19 @@ export default function BuySellPage() {
               <p className="mt-2 text-sm text-muted">{text}</p>
             </article>
           ))}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <GlowButton href={siteConfig.contact.whatsappHref} target="_blank">
+            WhatsApp About Trade-In
+          </GlowButton>
+          <Link
+            href={siteConfig.contact.mapsHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
+          >
+            Get Directions
+          </Link>
         </div>
       </div>
     </div>

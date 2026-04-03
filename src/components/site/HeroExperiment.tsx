@@ -39,12 +39,12 @@ export default function HeroExperiment() {
               </Link>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <GlowButton href="/contact">Get Repair Quote</GlowButton>
+              <GlowButton href="/book">Book a Repair</GlowButton>
               <Link
                 href="/repair-services"
                 className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
               >
-                See Repair Menu
+                See Services
               </Link>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
