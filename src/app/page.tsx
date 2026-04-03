@@ -5,6 +5,7 @@ import GlowButton from "@/components/ui/GlowButton";
 import TestimonialSlider from "@/components/site/TestimonialSlider";
 import HeroExperiment from "@/components/site/HeroExperiment";
 import RepairIssueQuickForm from "@/components/site/RepairIssueQuickForm";
+import BookingWidget from "@/components/booking/BookingWidget";
 import JsonLd from "@/components/seo/JsonLd";
 import Reveal from "@/components/ui/Reveal";
 import { siteConfig } from "@/content/site";
@@ -26,7 +27,7 @@ export default function Home() {
       </section>
 
       <section className="py-8">
-        <Reveal className="container-base grid gap-4 md:grid-cols-3" delay={0.05}>
+        <Reveal direction="left" className="container-base grid gap-4 md:grid-cols-3" delay={0.05}>
           {[
             ["Book Online in 60 Seconds", "Simple form and WhatsApp flow designed to get your quote quickly."],
             ["Walk-in or Collection Advice", "We support urgent walk-ins and help you choose the quickest route."],
@@ -41,7 +42,7 @@ export default function Home() {
       </section>
 
       <section className="py-14">
-        <Reveal className="container-base" delay={0.08}>
+        <Reveal direction="right" className="container-base" delay={0.08}>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Everything your device needs</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[
@@ -60,7 +61,7 @@ export default function Home() {
       </section>
 
       <section className="py-14">
-        <Reveal className="container-base glass-panel rounded-4xl p-6 md:p-8" delay={0.1}>
+        <Reveal direction="up" className="container-base glass-panel rounded-4xl p-6 md:p-8" delay={0.1}>
           <div className="grid items-center gap-6 md:grid-cols-2">
             <div>
               <h2 className="text-3xl font-bold tracking-tight">Repair by issue</h2>
@@ -92,7 +93,7 @@ export default function Home() {
       </section>
 
       <section className="py-14">
-        <Reveal className="container-base" delay={0.1}>
+        <Reveal direction="right" className="container-base" delay={0.1}>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Local customers, real feedback</h2>
           <div className="mt-6">
             <TestimonialSlider />
@@ -100,26 +101,22 @@ export default function Home() {
         </Reveal>
       </section>
 
-      <section className="py-6">
-        <Reveal className="container-base" delay={0.12}>
-          <h2 className="text-2xl font-bold tracking-tight">Supported Ecosystems</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {[
-              ["/icons/apple.svg", "Apple Devices"],
-              ["/icons/google-maps.svg", "Easy to Find"],
-              ["/icons/whatsapp.svg", "WhatsApp Fast Contact"],
-            ].map(([src, label]) => (
-              <article key={label} className="premium-card flex items-center gap-3 rounded-2xl p-4">
-                <Image src={src} alt={label} width={36} height={36} />
-                <p className="font-semibold tracking-tight">{label}</p>
-              </article>
-            ))}
+      <section className="py-14">
+        <Reveal direction="up" className="container-base" delay={0.12}>
+          <div className="max-w-3xl mx-auto mb-8 text-center">
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Schedule Your Visit</h2>
+            <p className="mt-3 text-muted max-w-xl mx-auto">
+              Choose a convenient time from our available slots below to secure your repair fast. No upfront cost.
+            </p>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <BookingWidget />
           </div>
         </Reveal>
       </section>
 
       <section className="py-10">
-        <Reveal className="container-base rounded-4xl border border-red-200/80 bg-linear-to-r from-red-50 via-white to-white p-8 shadow-[0_30px_80px_rgba(203,30,39,0.12)]" delay={0.14}>
+        <Reveal direction="up" className="container-base rounded-4xl border border-red-200/80 bg-linear-to-r from-red-50 via-white to-white p-8 shadow-[0_30px_80px_rgba(203,30,39,0.12)]" delay={0.14}>
           <h2 className="text-3xl font-bold tracking-tight">Need help now?</h2>
           <p className="mt-2 max-w-2xl text-muted">
             Visit us on Greenwich High Road or message us for a quick quote with fast turnaround.

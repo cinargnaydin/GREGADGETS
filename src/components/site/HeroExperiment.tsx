@@ -60,7 +60,25 @@ export default function HeroExperiment() {
                 Fast diagnostics, transparent pricing and WhatsApp-first support for Greenwich.
                 Walk-ins welcome.
               </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex gap-3">
+                <Link
+                  href={siteConfig.contact.whatsappHref}
+                  target="_blank"
+                  className="glass-panel flex items-center justify-center rounded-full h-11 w-11 transition-transform hover:-translate-y-0.5 hover:bg-white/90"
+                  aria-label="Contact us on WhatsApp"
+                >
+                  <Image src="/icons/whatsapp.svg" alt="WhatsApp" width={22} height={22} />
+                </Link>
+                <Link
+                  href={siteConfig.contact.mapsHref}
+                  target="_blank"
+                  className="glass-panel flex items-center justify-center rounded-full h-11 w-11 transition-transform hover:-translate-y-0.5 hover:bg-white/90"
+                  aria-label="Find us on Google Maps"
+                >
+                  <Image src="/icons/google-maps.svg" alt="Google Maps" width={22} height={22} />
+                </Link>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
                 <GlowButton href="/contact">Check My Repair Cost</GlowButton>
                 <Link
                   href="/repair-services"
@@ -102,7 +120,25 @@ export default function HeroExperiment() {
               Screen, battery, charging and water-damage fixes with clear quotes before repair.
               Walk in, message on WhatsApp, or book online in under a minute.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-5 flex gap-3">
+              <Link
+                href={siteConfig.contact.whatsappHref}
+                target="_blank"
+                className="glass-panel flex items-center justify-center rounded-full h-11 w-11 transition-transform hover:-translate-y-0.5 hover:bg-white/90"
+                aria-label="Contact us on WhatsApp"
+              >
+                <Image src="/icons/whatsapp.svg" alt="WhatsApp" width={22} height={22} />
+              </Link>
+              <Link
+                href={siteConfig.contact.mapsHref}
+                target="_blank"
+                className="glass-panel flex items-center justify-center rounded-full h-11 w-11 transition-transform hover:-translate-y-0.5 hover:bg-white/90"
+                aria-label="Find us on Google Maps"
+              >
+                <Image src="/icons/google-maps.svg" alt="Google Maps" width={22} height={22} />
+              </Link>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <GlowButton href="/contact">Get Repair Quote</GlowButton>
               <Link
                 href="/repair-services"
