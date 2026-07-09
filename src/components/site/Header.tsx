@@ -6,9 +6,11 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import GlowButton from "@/components/ui/GlowButton";
 import { navLinks } from "@/content/site";
+import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const bookingHref = getLeadFunnelHref("/book");
 
   return (
     <header className="sticky top-0 z-40 border-b border-black/5 bg-white/70 backdrop-blur-xl">
@@ -35,7 +37,7 @@ export default function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden md:block">
-          <GlowButton href="/book">Book Now</GlowButton>
+          <GlowButton href={bookingHref}>Book Now</GlowButton>
         </div>
 
         {/* Mobile: hamburger */}
@@ -60,10 +62,10 @@ export default function Header() {
                 onClick={() => setMenuOpen(false)}
               >
                 {item.label}
-              </Link>
-            ))}
-            <div className="mt-2 px-4">
-              <GlowButton href="/book" className="w-full justify-center">
+            </Link>
+          ))}
+          <div className="mt-2 px-4">
+              <GlowButton href={bookingHref} className="w-full justify-center">
                 Book Now
               </GlowButton>
             </div>

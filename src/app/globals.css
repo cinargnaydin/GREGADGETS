@@ -20,6 +20,20 @@
   --color-brand-soft: var(--brand-soft);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-jakarta);
+  --shadow-glow: 0 0 20px rgba(203, 30, 39, 0.35);
+  --shadow-glow-lg: 0 0 42px rgba(203, 30, 39, 0.55);
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(220%); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.88; filter: brightness(1.2); }
 }
 
 body {

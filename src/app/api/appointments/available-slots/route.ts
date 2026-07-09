@@ -1,120 +1,107 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase/firebase-admin';
+import { getOptionalAdminDb } from '@/lib/firebase/firebase-admin';
 import { getBusySlots } from '@/lib/google-calendar';
-import { parseISO, format, addMinutes, isBefore, startOfDay, endOfDay, isSameDay } from 'date-fns';
+import { listDevAppointmentBookingsForDay } from '@/lib/dev-store';
+import {
+  isValidDateStr,
+  resolveWorkingWindow,
+  timeToMinutes,
+  zonedDayBounds,
+  zonedWallClockToUtc,
+  formatZonedTime,
+} from '@/lib/schedule';
 
 const APPOINTMENT_DURATION_MINUTES = 60; // Configurable duration
+
+type AppointmentData = {
+  startTime?: { toDate?: () => Date };
+  endTime?: { toDate?: () => Date };
+};
+type CalendarBusySlot = {
+  start?: string | null;
+  end?: string | null;
+};
+
+function minutesToTime(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dateStr = searchParams.get('date'); // YYYY-MM-DD
 
-  if (!dateStr) {
-    return NextResponse.json({ error: 'Date is required' }, { status: 400 });
+  if (!dateStr || !isValidDateStr(dateStr)) {
+    return NextResponse.json({ error: 'A valid date (YYYY-MM-DD) is required' }, { status: 400 });
   }
 
   try {
-    const targetDate = parseISO(dateStr);
-    const dayOfWeek = format(targetDate, 'EEEE').toLowerCase(); // e.g., 'monday'
+    const adminDb = getOptionalAdminDb();
 
-    // 1. Fetch Schedule Settings & Overrides
-    const [settingsDoc, overrideDoc] = await Promise.all([
-      adminDb.collection('schedule_settings').doc('default').get(),
-      adminDb.collection('schedule_overrides').doc(dateStr).get()
-    ]);
-
-    const settings = settingsDoc.data() || {};
-    const override = overrideDoc.data();
-
-    // Check if store is overridden to closed
-    if (override && override.isClosed) {
-      return NextResponse.json({ slots: [] }); // No availability
+    // 1. Resolve working hours (honours overrides + weekly schedule, shop TZ)
+    const window = await resolveWorkingWindow(dateStr);
+    if (window.isClosed) {
+      return NextResponse.json({ slots: [] });
     }
 
-    // Determine working hours
-    let startTimeStr = '09:00';
-    let endTimeStr = '17:00';
+    const startMinutes = timeToMinutes(window.startTime);
+    const endMinutes = timeToMinutes(window.endTime);
 
-    if (override && override.startTime && override.endTime) {
-      startTimeStr = override.startTime;
-      endTimeStr = override.endTime;
-    } else if (settings[dayOfWeek]) {
-      if (settings[dayOfWeek].isClosed) {
-        return NextResponse.json({ slots: [] });
-      }
-      startTimeStr = settings[dayOfWeek].startTime || '09:00';
-      endTimeStr = settings[dayOfWeek].endTime || '17:00';
-    }
-
-    // Create start and end Date objects
-    const [startH, startM] = startTimeStr.split(':').map(Number);
-    const [endH, endM] = endTimeStr.split(':').map(Number);
-    
-    let workStart = new Date(targetDate);
-    workStart.setHours(startH, startM, 0, 0);
-    
-    let workEnd = new Date(targetDate);
-    workEnd.setHours(endH, endM, 0, 0);
-
-    // 2. Build Potential Slots
+    // 2. Build potential slots as absolute instants in the shop's timezone
     const potentialSlots: { start: Date; end: Date }[] = [];
-    let currentSlot = new Date(workStart);
-
-    while (isBefore(currentSlot, workEnd)) {
-      const slotEnd = addMinutes(currentSlot, APPOINTMENT_DURATION_MINUTES);
-      if (isBefore(slotEnd, workEnd) || slotEnd.getTime() === workEnd.getTime()) {
-        potentialSlots.push({ start: new Date(currentSlot), end: slotEnd });
-      }
-      currentSlot = addMinutes(currentSlot, APPOINTMENT_DURATION_MINUTES);
+    for (let m = startMinutes; m + APPOINTMENT_DURATION_MINUTES <= endMinutes; m += APPOINTMENT_DURATION_MINUTES) {
+      const start = zonedWallClockToUtc(dateStr, minutesToTime(m));
+      const end = new Date(start.getTime() + APPOINTMENT_DURATION_MINUTES * 60 * 1000);
+      potentialSlots.push({ start, end });
     }
 
-    // 3. Fetch Booked slots from Firestore
-    const dayStart = startOfDay(targetDate);
-    const dayEnd = endOfDay(targetDate);
-    
-    const appointmentsSnapshot = await adminDb.collection('appointments')
-      .where('startTime', '>=', dayStart)
-      .where('startTime', '<=', dayEnd)
-      .get();
+    // 3. Fetch booked slots (single-field range query -> no composite index)
+    const { dayStart, dayEnd } = zonedDayBounds(dateStr);
+    const appointmentsSnapshot = adminDb
+      ? await adminDb.collection('appointments')
+          .where('startTime', '>=', dayStart)
+          .where('startTime', '<=', dayEnd)
+          .get()
+      : null;
 
-    const firestoreBookings = appointmentsSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        start: data.startTime.toDate(),
-        end: data.endTime.toDate(),
-      };
-    });
+    const firestoreBookings = appointmentsSnapshot
+      ? appointmentsSnapshot.docs.flatMap(doc => {
+          const data = doc.data() as AppointmentData;
+          const start = data.startTime?.toDate?.();
+          const end = data.endTime?.toDate?.();
+          return start && end ? [{ start, end }] : [];
+        })
+      : listDevAppointmentBookingsForDay(dayStart, dayEnd);
 
-    // 4. Fetch Google Calendar Busy Times
+    // 4. Fetch Google Calendar busy times
     const gCalBusyTimes = await getBusySlots(dayStart.toISOString(), dayEnd.toISOString());
 
-    // 5. Filter Potential Slots
+    // 5. Filter potential slots
     const now = new Date();
     const availableSlots = potentialSlots.filter(slot => {
-      // Don't show past slots
-      if (isBefore(slot.start, now)) return false;
+      if (slot.start < now) return false; // Don't show past slots
 
-      // Check Firestore conflicts
-      const hasDbConflict = firestoreBookings.some(booking => {
-        return (slot.start < booking.end && slot.end > booking.start);
-      });
+      const hasDbConflict = firestoreBookings.some(booking =>
+        slot.start < booking.end && slot.end > booking.start
+      );
       if (hasDbConflict) return false;
 
-      // Check GCal conflicts
-      const hasGCalConflict = gCalBusyTimes.some((busy: any) => {
+      const hasGCalConflict = gCalBusyTimes.some((busy: CalendarBusySlot) => {
+        if (!busy.start || !busy.end) return false;
         const busyStart = new Date(busy.start);
         const busyEnd = new Date(busy.end);
-        return (slot.start < busyEnd && slot.end > busyStart);
+        return slot.start < busyEnd && slot.end > busyStart;
       });
       if (hasGCalConflict) return false;
 
       return true;
     });
 
-    const formattedSlots = availableSlots.map(slot => format(slot.start, 'HH:mm'));
+    const formattedSlots = availableSlots.map(slot => formatZonedTime(slot.start));
 
     return NextResponse.json({ slots: formattedSlots });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching available slots:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

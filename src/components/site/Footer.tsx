@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { siteConfig } from "@/content/site";
+import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
-const serviceLinks = [
+const baseServiceLinks = [
   { href: "/repair-services", label: "Repairs" },
   { href: "/buy-sell", label: "Buy/Sell" },
   { href: "/shop", label: "Shop" },
@@ -10,6 +11,10 @@ const serviceLinks = [
 ];
 
 export default function Footer() {
+  const serviceLinks = baseServiceLinks.map((link) =>
+    link.href === "/book" ? { ...link, href: getLeadFunnelHref("/book") } : link
+  );
+
   return (
     <footer className="mt-20 border-t border-black/10 bg-white/80 backdrop-blur">
       <div className="container-base py-8">

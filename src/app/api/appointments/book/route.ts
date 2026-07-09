@@ -1,21 +1,39 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase/firebase-admin';
-import { createCalendarEvent, getBusySlots } from '@/lib/google-calendar';
+import { getOptionalAdminDb } from '@/lib/firebase/firebase-admin';
+import { createDevAppointment, hasDevAppointmentConflict } from '@/lib/dev-store';
+import { createCalendarEvent, deleteCalendarEvent, getBusySlots } from '@/lib/google-calendar';
+import { updateLead } from '@/lib/leads';
+import { shouldSendRealNotifications } from '@/lib/notifications';
 import { sendSMS } from '@/lib/sms';
 import { Resend } from 'resend';
-import { parseISO, addMinutes, isBefore } from 'date-fns';
+import { isBefore } from 'date-fns';
 import { z } from 'zod';
+import {
+  isValidDateStr,
+  isValidTimeStr,
+  resolveWorkingWindow,
+  timeToMinutes,
+  zonedDayBounds,
+  zonedWallClockToUtc,
+} from '@/lib/schedule';
 
 const APPOINTMENT_DURATION_MINUTES = 60;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Greenwich Gadgets <onboarding@resend.dev>';
+const bookingNotificationEmail = process.env.BOOKING_NOTIFICATION_EMAIL;
+
+// Thrown when the slot is taken during the atomic re-check; mapped to a 409.
+class SlotConflictError extends Error {}
 
 const bookingSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(5),
-  date: z.string(), // YYYY-MM-DD
-  time: z.string(), // HH:mm
+  issue: z.string().optional(),
+  leadId: z.string().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time must be HH:mm'),
 });
 
 export async function POST(request: Request) {
@@ -27,83 +45,187 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid input data', details: result.error.issues }, { status: 400 });
     }
 
-    const { name, email, phone, date, time } = result.data;
+    const { name, email, phone, issue, leadId, date, time } = result.data;
 
-    // Construct start and end times
-    const [hours, minutes] = time.split(':').map(Number);
-    const startTime = parseISO(date);
-    startTime.setHours(hours, minutes, 0, 0);
-    const endTime = addMinutes(startTime, APPOINTMENT_DURATION_MINUTES);
+    // Defensive re-validation (schema already covers this, keeps the helpers honest)
+    if (!isValidDateStr(date) || !isValidTimeStr(time)) {
+      return NextResponse.json({ error: 'Invalid date or time format' }, { status: 400 });
+    }
+
+    // Construct start/end as absolute instants in the shop's timezone (not the host's)
+    const startTime = zonedWallClockToUtc(date, time);
+    const endTime = new Date(startTime.getTime() + APPOINTMENT_DURATION_MINUTES * 60 * 1000);
 
     if (isBefore(startTime, new Date())) {
       return NextResponse.json({ error: 'Cannot book in the past' }, { status: 400 });
     }
 
-    // Double check availability to prevent race conditions
-    // 1. Check Firestore
-    const conflictsSnapshot = await adminDb.collection('appointments')
-      .where('startTime', '<', endTime)
-      .where('endTime', '>', startTime)
-      .get();
-      
-    if (!conflictsSnapshot.empty) {
-      return NextResponse.json({ error: 'Time slot is no longer available.' }, { status: 409 });
+    // Enforce business hours / closed days on the server (not just in the slot list)
+    const window = await resolveWorkingWindow(date);
+    if (window.isClosed) {
+      return NextResponse.json({ error: 'We are closed on this date.' }, { status: 409 });
+    }
+    const requestedMinutes = timeToMinutes(time);
+    const openMinutes = timeToMinutes(window.startTime);
+    const closeMinutes = timeToMinutes(window.endTime);
+    if (requestedMinutes < openMinutes || requestedMinutes + APPOINTMENT_DURATION_MINUTES > closeMinutes) {
+      return NextResponse.json({ error: 'Selected time is outside our opening hours.' }, { status: 409 });
     }
 
-    // 2. Check GCal
+    const adminDb = getOptionalAdminDb();
+
+    // Check external calendar availability before we commit anything
     const busySlots = await getBusySlots(startTime.toISOString(), endTime.toISOString());
-    const gCalConflict = busySlots.some((busy: any) => {
+    const gCalConflict = busySlots.some((busy: { start?: string | null; end?: string | null }) => {
+      if (!busy.start || !busy.end) return false;
       const busyStart = new Date(busy.start);
       const busyEnd = new Date(busy.end);
-      return (startTime < busyEnd && endTime > busyStart);
+      return startTime < busyEnd && endTime > busyStart;
     });
-
     if (gCalConflict) {
-       return NextResponse.json({ error: 'Time slot is no longer available in calendar.' }, { status: 409 });
+      return NextResponse.json({ error: 'Time slot is no longer available in calendar.' }, { status: 409 });
     }
 
-    // Add to Google Calendar
-    const eventSummary = `Appointment: ${name}`;
-    const eventDesc = `Name: ${name}\nEmail: ${email}\nPhone: ${phone}`;
-    const calendarEvent = await createCalendarEvent(
-      startTime.toISOString(),
-      endTime.toISOString(),
-      eventSummary,
-      eventDesc
-    );
+    // Persist the appointment FIRST (atomically for Firestore), then attach the
+    // calendar event. This ordering means a failed DB write can never leave an
+    // orphaned calendar event, and the atomic re-check prevents double-booking.
+    let appointmentId: string;
 
-    // Save to Firestore
-    const docRef = await adminDb.collection('appointments').add({
-      name,
-      email,
-      phone,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      calendarEventId: calendarEvent?.id || null,
-      createdAt: new Date(),
-    });
+    if (adminDb) {
+      const { dayStart, dayEnd } = zonedDayBounds(date);
+      // Single-field range query -> no composite index required.
+      const dayQuery = adminDb
+        .collection('appointments')
+        .where('startTime', '>=', dayStart)
+        .where('startTime', '<=', dayEnd);
 
-    // Send Confirmations Asynchronously
+      appointmentId = await adminDb.runTransaction(async (tx) => {
+        const snapshot = await tx.get(dayQuery);
+        const conflict = snapshot.docs.some((doc) => {
+          const data = doc.data() as { startTime?: { toDate?: () => Date }; endTime?: { toDate?: () => Date } };
+          const s = data.startTime?.toDate?.();
+          const e = data.endTime?.toDate?.();
+          return !!s && !!e && startTime < e && endTime > s;
+        });
+        if (conflict) throw new SlotConflictError();
+
+        const docRef = adminDb.collection('appointments').doc();
+        tx.set(docRef, {
+          name,
+          email,
+          phone,
+          ...(issue ? { issue } : {}),
+          ...(leadId ? { leadId } : {}),
+          startTime,
+          endTime,
+          calendarEventId: null,
+          createdAt: new Date(),
+        });
+        return docRef.id;
+      });
+    } else {
+      if (hasDevAppointmentConflict(startTime, endTime)) {
+        return NextResponse.json({ error: 'Time slot is no longer available.' }, { status: 409 });
+      }
+      const appointment = createDevAppointment({
+        name,
+        email,
+        phone,
+        ...(issue ? { issue } : {}),
+        ...(leadId ? { leadId } : {}),
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        calendarEventId: null,
+      });
+      appointmentId = appointment.id;
+    }
+
+    // Attach a calendar event (best-effort; never throws — returns null on failure)
+    const eventSummary = issue ? `Appointment: ${issue} - ${name}` : `Appointment: ${name}`;
+    const eventDesc = [
+      issue ? `Issue: ${issue}` : null,
+      leadId ? `Lead ID: ${leadId}` : null,
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Phone: ${phone}`,
+    ].filter(Boolean).join('\n');
+
+    let calendarEventId: string | null = null;
+    try {
+      const calendarEvent = await createCalendarEvent(
+        startTime.toISOString(),
+        endTime.toISOString(),
+        eventSummary,
+        eventDesc
+      );
+      calendarEventId = calendarEvent?.id || null;
+      if (calendarEventId && adminDb) {
+        await adminDb.collection('appointments').doc(appointmentId).update({ calendarEventId });
+      }
+    } catch (calendarError) {
+      // If linking the event to the appointment failed, remove the stray event.
+      console.error('Error attaching calendar event:', calendarError);
+      if (calendarEventId) await deleteCalendarEvent(calendarEventId);
+      calendarEventId = null;
+    }
+
+    // Send confirmations asynchronously (fire-and-forget)
     const timeFormatted = `${time} on ${date}`;
-    
-    // Send SMS
-    if (process.env.TWILIO_ACCOUNT_SID) {
-      sendSMS(phone, `Hi ${name}, your appointment is confirmed for ${timeFormatted}.`).catch(console.error);
+    const sendRealNotifications = shouldSendRealNotifications();
+
+    if (sendRealNotifications && process.env.TWILIO_ACCOUNT_SID) {
+      sendSMS(phone, `Hi ${name}, your ${issue ? `${issue} ` : ''}appointment is confirmed for ${timeFormatted}.`).catch(console.error);
     }
 
-    // Send Email
-    if (resend) {
+    if (sendRealNotifications && resend) {
       resend.emails.send({
-        from: 'onboarding@resend.dev', // Default resend testing email
-        to: email, // If using free resend, will only work with the verified email unless domain is verified
+        from: resendFromEmail,
+        to: email,
         subject: 'Appointment Confirmed',
-        html: `<p>Hi ${name},</p><p>Your appointment is confirmed for <strong>${timeFormatted}</strong>.</p><p>Thank you!</p>`
+        text: `Hi ${name},\n\nYour ${issue ? `${issue} ` : ''}appointment is confirmed for ${timeFormatted}.\n\nThank you!`,
+      }).catch(console.error);
+
+      if (bookingNotificationEmail) {
+        resend.emails.send({
+          from: resendFromEmail,
+          to: bookingNotificationEmail,
+          subject: `New repair booking - ${name} - ${timeFormatted}`,
+          text: [
+            'New repair booking received.',
+            '',
+            `Appointment ID: ${appointmentId}`,
+            `Name: ${name}`,
+            `Email: ${email}`,
+            `Phone: ${phone}`,
+            ...(issue ? [`Issue: ${issue}`] : []),
+            ...(leadId ? [`Lead ID: ${leadId}`] : []),
+            `Date: ${date}`,
+            `Time: ${time}`,
+            `Calendar Event ID: ${calendarEventId || 'Not created'}`,
+          ].join('\n'),
+        }).catch(console.error);
+      }
+    }
+
+    if (leadId) {
+      updateLead(leadId, {
+        stage: 'booked',
+        preferredContact: 'booking',
+        appointmentId,
       }).catch(console.error);
     }
 
-    return NextResponse.json({ success: true, appointmentId: docRef.id });
+    return NextResponse.json({
+      success: true,
+      appointmentId,
+      fallback: !adminDb,
+      notifications: sendRealNotifications ? 'sent-if-configured' : 'preview-only',
+    });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof SlotConflictError) {
+      return NextResponse.json({ error: 'Time slot is no longer available.' }, { status: 409 });
+    }
     console.error('Error booking appointment:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

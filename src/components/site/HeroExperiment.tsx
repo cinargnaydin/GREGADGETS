@@ -2,8 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import { siteConfig } from "@/content/site";
+import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
 export default function HeroExperiment() {
+  const bookingHref = getLeadFunnelHref("/book");
+
   return (
     <div className="container-base">
       <div className="grid gap-5 lg:grid-cols-12">
@@ -24,6 +27,7 @@ export default function HeroExperiment() {
               <Link
                 href={siteConfig.contact.whatsappHref}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="glass-panel flex items-center justify-center rounded-full h-11 w-11 transition-transform hover:-translate-y-0.5 hover:bg-white/90"
                 aria-label="Contact us on WhatsApp"
               >
@@ -32,6 +36,7 @@ export default function HeroExperiment() {
               <Link
                 href={siteConfig.contact.mapsHref}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="glass-panel flex items-center justify-center rounded-full h-11 w-11 transition-transform hover:-translate-y-0.5 hover:bg-white/90"
                 aria-label="Find us on Google Maps"
               >
@@ -39,7 +44,7 @@ export default function HeroExperiment() {
               </Link>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <GlowButton href="/book">Book a Repair</GlowButton>
+              <GlowButton href={bookingHref}>Book a Repair</GlowButton>
               <Link
                 href="/repair-services"
                 className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"

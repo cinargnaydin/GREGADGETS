@@ -5,6 +5,8 @@ import JsonLd from "@/components/seo/JsonLd";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 import { breadcrumbSchema } from "@/lib/schema";
+import GlowButton from "@/components/ui/GlowButton";
+import { getLeadFunnelHref, isLeadFunnelEnabled } from "@/lib/lead-funnel";
 
 export const metadata: Metadata = buildMetadata({
   title: "Contact & Find Us | Greenwich Gadgets",
@@ -13,6 +15,8 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function ContactPage() {
+  const funnelHref = getLeadFunnelHref("/book");
+
   return (
     <div className="py-14 md:py-16">
       <div className="container-base grid gap-8 md:grid-cols-2">
@@ -59,7 +63,7 @@ export default function ContactPage() {
             <Link href={siteConfig.contact.phoneHref} className="glass-panel rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5">
               Call {siteConfig.contact.phoneDisplay}
             </Link>
-            <Link href={siteConfig.contact.whatsappHref} target="_blank" rel="noopener noreferrer" className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white shadow-glow">
+            <Link href={siteConfig.contact.whatsappHref} target="_blank" rel="noopener noreferrer" className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5 hover:bg-brand-red-dark">
               WhatsApp
             </Link>
             <Link href={siteConfig.contact.mapsHref} target="_blank" rel="noopener noreferrer" className="glass-panel rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5">
@@ -67,7 +71,19 @@ export default function ContactPage() {
             </Link>
           </div>
         </div>
-        <QuoteForm />
+        {isLeadFunnelEnabled ? (
+          <div className="glass-panel h-fit rounded-3xl p-6">
+            <h2 className="text-2xl font-bold tracking-tight">Start a repair request</h2>
+            <p className="mt-2 text-sm text-muted">
+              Tell us your issue and choose how you would like us to help — book a repair slot, get a WhatsApp quote, or request a callback.
+            </p>
+            <div className="mt-5">
+              <GlowButton href={funnelHref}>Get Quote / Book Repair</GlowButton>
+            </div>
+          </div>
+        ) : (
+          <QuoteForm />
+        )}
       </div>
       <JsonLd
         id="localbusiness-contact"

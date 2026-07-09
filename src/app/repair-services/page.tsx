@@ -6,6 +6,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 import { breadcrumbSchema } from "@/lib/schema";
+import { getLeadFunnelHref, isLeadFunnelEnabled } from "@/lib/lead-funnel";
 
 export const metadata: Metadata = buildMetadata({
   title: "Repair Services | Greenwich Gadgets",
@@ -14,6 +15,8 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function RepairServicesPage() {
+  const bookingHref = getLeadFunnelHref("/book");
+
   return (
     <>
       <div className="py-14 md:py-16">
@@ -54,7 +57,7 @@ export default function RepairServicesPage() {
               <p className="font-semibold">Ready to book?</p>
               <p className="mt-1 text-sm text-muted">Secure your slot online or send a quick WhatsApp message for a quote.</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <GlowButton href="/book">Book Appointment</GlowButton>
+                <GlowButton href={bookingHref}>Book Appointment</GlowButton>
                 <Link
                   href={siteConfig.contact.whatsappHref}
                   target="_blank"
@@ -65,7 +68,19 @@ export default function RepairServicesPage() {
                 </Link>
               </div>
             </div>
-            <QuoteForm />
+            {isLeadFunnelEnabled ? (
+              <div className="glass-panel rounded-2xl p-5">
+                <p className="font-semibold">One quick repair request</p>
+                <p className="mt-1 text-sm text-muted">
+                  Pick your issue, then choose to book a repair slot, get a WhatsApp quote, or request a callback.
+                </p>
+                <div className="mt-4">
+                  <GlowButton href={bookingHref}>Start Repair Request</GlowButton>
+                </div>
+              </div>
+            ) : (
+              <QuoteForm />
+            )}
           </div>
         </div>
       </div>

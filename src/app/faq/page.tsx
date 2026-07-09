@@ -3,6 +3,7 @@ import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { buildMetadata } from "@/lib/seo";
+import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
 const faqs = [
   {
@@ -30,6 +31,8 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function FaqPage() {
+  const bookingHref = getLeadFunnelHref("/book");
+
   return (
     <div className="py-14 md:py-16">
       <div className="container-base max-w-4xl">
@@ -45,7 +48,7 @@ export default function FaqPage() {
           ))}
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
-          <GlowButton href="/book">Book Now</GlowButton>
+          <GlowButton href={bookingHref}>Book Now</GlowButton>
           <Link
             href="/contact"
             className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"

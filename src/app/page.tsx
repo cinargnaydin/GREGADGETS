@@ -9,6 +9,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import Reveal from "@/components/ui/Reveal";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
+import { getLeadFunnelHref, isLeadFunnelEnabled } from "@/lib/lead-funnel";
 
 export const metadata: Metadata = buildMetadata({
   title: siteConfig.title,
@@ -40,6 +41,8 @@ const serviceCards = [
 ];
 
 export default function Home() {
+  const bookingHref = getLeadFunnelHref("/book");
+
   return (
     <div className="pb-8">
       <section className="pt-14 pb-8 md:pt-18">
@@ -89,7 +92,16 @@ export default function Home() {
                 Pick your issue, enter phone number, and submit. We will get back quickly with a quote.
               </p>
               <div className="mt-4">
-                <RepairIssueQuickForm />
+                {isLeadFunnelEnabled ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted">
+                      Tell us what needs fixing and choose how to continue — book a repair slot, get a quick WhatsApp quote, or request a callback.
+                    </p>
+                    <GlowButton href={bookingHref}>Start Repair Request</GlowButton>
+                  </div>
+                ) : (
+                  <RepairIssueQuickForm />
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -128,14 +140,15 @@ export default function Home() {
             Book your repair slot online in under a minute, or message us for a quick quote.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <GlowButton href="/book">Book Appointment</GlowButton>
+            <GlowButton href={bookingHref}>Book Appointment</GlowButton>
             <GlowButton href={siteConfig.contact.whatsappHref} target="_blank">
               WhatsApp Quote
             </GlowButton>
             <Link
               href={siteConfig.contact.mapsHref}
-              className="glass-panel rounded-full px-5 py-3 text-sm font-semibold"
+              className="glass-panel rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
               target="_blank"
+              rel="noopener noreferrer"
             >
               Directions
             </Link>

@@ -34,7 +34,7 @@ export default function RootLayout({
       lang="en"
       className={`${manrope.variable} ${jakarta.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col pb-24 md:pb-0">
         <Header />
         <main className="flex-1">{children}</main>
         <MobileStickyCta />

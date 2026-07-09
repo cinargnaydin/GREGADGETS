@@ -14,11 +14,6 @@ export function buildMetadata({ title, description, path = "/" }: MetaInput): Me
     title,
     description,
     alternates: { canonical },
-    icons: {
-      icon: [{ url: "/images/logo.png", type: "image/png" }],
-      shortcut: ["/images/logo.png"],
-      apple: [{ url: "/images/logo.png", type: "image/png" }],
-    },
     openGraph: {
       title,
       description,
