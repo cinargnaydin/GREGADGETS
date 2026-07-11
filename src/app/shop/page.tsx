@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import { siteConfig } from "@/content/site";
@@ -22,25 +21,13 @@ export default function ShopPage() {
           </p>
         </div>
 
-        {/* Shop interior photos */}
+        {/* Shop interior photos — coming soon */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="glass-panel overflow-hidden rounded-3xl p-2">
-            <Image
-              src="/images/shopinterior.png"
-              alt="Greenwich Gadgets shop interior"
-              width={1200}
-              height={800}
-              className="h-64 w-full rounded-2xl border border-white/70 object-cover md:h-80"
-            />
+          <div className="glass-panel flex h-64 items-center justify-center rounded-3xl p-2 md:h-80">
+            <span className="text-sm font-semibold text-muted">Images coming soon</span>
           </div>
-          <div className="glass-panel overflow-hidden rounded-3xl p-2">
-            <Image
-              src="/images/shopinterior2.png"
-              alt="Greenwich Gadgets shop interior showing product displays"
-              width={1200}
-              height={800}
-              className="h-64 w-full rounded-2xl border border-white/70 object-cover md:h-80"
-            />
+          <div className="glass-panel flex h-64 items-center justify-center rounded-3xl p-2 md:h-80">
+            <span className="text-sm font-semibold text-muted">Images coming soon</span>
           </div>
         </div>
 
