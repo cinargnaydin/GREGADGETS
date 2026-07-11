@@ -71,17 +71,18 @@ create table if not exists public.schedule_settings (
   end_time    text    -- 'HH:mm'
 );
 
--- Default weekly hours (matches the app's dev defaults: Mon–Fri 09:00–17:00,
--- weekends closed). Adjust in the Supabase table editor or a future admin panel.
+-- Default weekly hours (matches the shop's real listing: Mon–Fri 08:30–20:00,
+-- Sat 09:00–20:00, Sun 12:00–15:00). Adjust in the Supabase table editor or a
+-- future admin panel.
 insert into public.schedule_settings (day_of_week, is_closed, start_time, end_time)
 values
-  ('monday',    false, '09:00', '17:00'),
-  ('tuesday',   false, '09:00', '17:00'),
-  ('wednesday', false, '09:00', '17:00'),
-  ('thursday',  false, '09:00', '17:00'),
-  ('friday',    false, '09:00', '17:00'),
-  ('saturday',  true,  '10:00', '14:00'),
-  ('sunday',    true,  '10:00', '14:00')
+  ('monday',    false, '08:30', '20:00'),
+  ('tuesday',   false, '08:30', '20:00'),
+  ('wednesday', false, '08:30', '20:00'),
+  ('thursday',  false, '08:30', '20:00'),
+  ('friday',    false, '08:30', '20:00'),
+  ('saturday',  false, '09:00', '20:00'),
+  ('sunday',    false, '12:00', '15:00')
 on conflict (day_of_week) do nothing;
 
 -- ---------------------------------------------------------------------------

@@ -38,15 +38,22 @@ export async function GET(request: Request) {
     // 1. Resolve working hours (honours overrides + weekly schedule, shop TZ)
     const window = await resolveWorkingWindow(dateStr);
     if (window.isClosed) {
-      return NextResponse.json({ slots: [] });
+      // Distinguish a closed day from a fully-booked one so the UI can explain
+      // why there are no times, instead of showing a dead-end "no slots".
+      return NextResponse.json({ slots: [], closed: true });
     }
 
     const startMinutes = timeToMinutes(window.startTime);
     const endMinutes = timeToMinutes(window.endTime);
 
-    // 2. Build potential slots as absolute instants in the shop's timezone
+    // 2. Build potential slots as absolute instants in the shop's timezone.
+    //    Slots always start on the hour, even when the shop opens on the half
+    //    hour (e.g. 08:30 -> first slot 09:00). This keeps every slot aligned to
+    //    the hour so a single on-the-hour booking removes exactly one slot,
+    //    instead of straddling two half-past slots.
+    const firstSlotMinutes = Math.ceil(startMinutes / 60) * 60;
     const potentialSlots: { start: Date; end: Date }[] = [];
-    for (let m = startMinutes; m + APPOINTMENT_DURATION_MINUTES <= endMinutes; m += APPOINTMENT_DURATION_MINUTES) {
+    for (let m = firstSlotMinutes; m + APPOINTMENT_DURATION_MINUTES <= endMinutes; m += APPOINTMENT_DURATION_MINUTES) {
       const start = zonedWallClockToUtc(dateStr, minutesToTime(m));
       const end = new Date(start.getTime() + APPOINTMENT_DURATION_MINUTES * 60 * 1000);
       potentialSlots.push({ start, end });

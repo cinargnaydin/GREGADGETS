@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { format, addDays, startOfToday, isSameDay } from 'date-fns';
-import { Calendar, Clock, User, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Wrench } from 'lucide-react';
 import { track } from '@vercel/analytics/react';
+import { siteConfig } from '@/content/site';
 
-type Step = 'date' | 'time' | 'details' | 'success';
+type Step = 'issue' | 'date' | 'time' | 'details' | 'success';
 
 type CustomerDetails = {
   name: string;
@@ -46,11 +47,15 @@ function createInitialFormData(initialCustomer?: Partial<CustomerDetails>): Cust
 }
 
 export default function BookingWidget({ leadId, issue, initialCustomer }: BookingWidgetProps) {
-  const [step, setStep] = useState<Step>('date');
+  // When an issue is supplied (e.g. picked in the lead funnel) we pre-select it
+  // and start on the date step; otherwise the customer chooses the repair first.
+  const [step, setStep] = useState<Step>(issue ? 'date' : 'issue');
+  const [selectedIssue, setSelectedIssue] = useState<string>(issue ?? '');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [dateClosed, setDateClosed] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -76,6 +81,7 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
     let ignore = false;
     setLoadingSlots(true);
     setError('');
+    setDateClosed(false);
     setAvailableSlots([]); // clear stale slots from the previous date
 
     fetch(`/api/appointments/available-slots?date=${format(selectedDate, 'yyyy-MM-dd')}`)
@@ -83,6 +89,7 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
       .then(data => {
         if (ignore) return;
         if (data.slots) setAvailableSlots(data.slots);
+        if (data.closed) setDateClosed(true);
         else if (data.error) setError(data.error);
       })
       .catch(() => {
@@ -127,7 +134,7 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
         body: JSON.stringify({
           ...cleanedFormData,
           ...(leadId ? { leadId } : {}),
-          ...(issue ? { issue } : {}),
+          ...(selectedIssue ? { issue: selectedIssue } : {}),
           date: format(selectedDate, 'yyyy-MM-dd'),
           time: selectedTime,
         }),
@@ -138,7 +145,7 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
         setStep('success');
         track('booking_confirmed', {
           sourcePage: leadId ? 'lead_funnel' : 'book',
-          issue: issue || 'not_provided',
+          issue: selectedIssue || 'not_provided',
         });
       } else {
         setError(data.error || 'Failed to book appointment');
@@ -159,6 +166,8 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
         </h2>
         {step !== 'success' && (
           <div className="flex items-center gap-2 mt-4 text-sm font-medium">
+            <span className={step === 'issue' ? 'text-white' : 'text-red-200'}>Repair</span>
+            <ChevronRight className="h-4 w-4 text-red-300" />
             <span className={step === 'date' ? 'text-white' : 'text-red-200'}>Date</span>
             <ChevronRight className="h-4 w-4 text-red-300" />
             <span className={step === 'time' ? 'text-white' : 'text-red-200'}>Time</span>
@@ -176,9 +185,46 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
           </div>
         )}
 
-        {/* STEP 1: DATE */}
+        {/* STEP 1: ISSUE */}
+        {step === 'issue' && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <h3 className="text-lg font-medium text-black mb-4 flex items-center gap-2">
+              <Wrench className="h-5 w-5 text-gray-400" /> What needs fixing?
+            </h3>
+            <p className="text-sm text-gray-500 mb-2">Choose the repair you would like to book.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {siteConfig.repairIssues.map((option) => {
+                const isSelected = selectedIssue === option;
+                return (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setSelectedIssue(option);
+                      setStep('date');
+                    }}
+                    className={`p-3 rounded-xl border text-left font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${
+                      isSelected
+                        ? 'bg-brand-red border-brand-red text-white shadow-md'
+                        : 'bg-white border-gray-200 text-gray-900 hover:border-red-400 hover:bg-red-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: DATE */}
         {step === 'date' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <button
+              onClick={() => { setError(''); setStep('issue'); }}
+              className="text-sm text-gray-500 hover:text-black transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red flex items-center gap-1 mb-4"
+            >
+              <ChevronLeft className="h-4 w-4" /> Back to Repair
+            </button>
             <h3 className="text-lg font-medium text-black  mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-gray-400" /> Select a Date
             </h3>
@@ -228,8 +274,12 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
               <div className="py-8 text-center text-gray-500">Checking availability...</div>
             ) : availableSlots.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-gray-500 mb-4">No available times on this date.</p>
-                <button 
+                <p className="text-gray-500 mb-4">
+                  {dateClosed
+                    ? "We're closed on this day. Please pick another date."
+                    : 'All times on this date are booked.'}
+                </p>
+                <button
                   onClick={() => setStep('date')}
                   className="text-brand-red font-medium hover:underline"
                 >
@@ -249,7 +299,7 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
                       setStep('details');
                       track('slot_selected', {
                         sourcePage: leadId ? 'lead_funnel' : 'book',
-                        issue: issue || 'not_provided',
+                        issue: selectedIssue || 'not_provided',
                       });
                     }}
                       className={`p-3 rounded-xl border text-center transition-all font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${
@@ -279,14 +329,14 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
             
             <div className="bg-red-50 text-red-900 p-4 rounded-xl mb-6 font-medium flex justify-between items-center">
               <div>
-                {issue && (
+                {selectedIssue && (
                   <>
                     <div className="text-sm opacity-80 uppercase tracking-widest mb-1">Selected Repair</div>
-                    <div>{issue}</div>
+                    <div>{selectedIssue}</div>
                     <div className="text-sm opacity-80 uppercase tracking-widest mt-3 mb-1">Selected Slot</div>
                   </>
                 )}
-                {!issue && <div className="text-sm opacity-80 uppercase tracking-widest mb-1">Selected Slot</div>}
+                {!selectedIssue && <div className="text-sm opacity-80 uppercase tracking-widest mb-1">Selected Slot</div>}
                 <div>{selectedDate && format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</div>
               </div>
             </div>
@@ -369,11 +419,12 @@ export default function BookingWidget({ leadId, issue, initialCustomer }: Bookin
             </div>
             <h3 className="text-2xl font-bold text-black  mb-2">You are all set!</h3>
             <p className="text-gray-500 max-w-sm mx-auto mb-8">
-              Your {issue && <><strong>{issue}</strong> </>}appointment for <strong>{selectedDate && format(selectedDate, 'MMM d')}</strong> at <strong>{selectedTime}</strong> has been confirmed. We have sent you an email and SMS confirmation.
+              Your {selectedIssue && <><strong>{selectedIssue}</strong> </>}appointment for <strong>{selectedDate && format(selectedDate, 'MMM d')}</strong> at <strong>{selectedTime}</strong> has been confirmed. We have sent you an email and SMS confirmation.
             </p>
             <button
               onClick={() => {
-                setStep('date');
+                setStep(issue ? 'date' : 'issue');
+                setSelectedIssue(issue ?? '');
                 setSelectedDate(null);
                 setSelectedTime(null);
                 setEditingContactDetails(false);

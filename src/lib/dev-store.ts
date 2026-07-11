@@ -37,13 +37,13 @@ declare global {
 }
 
 export const defaultScheduleSettings: ScheduleSettings = {
-  monday: { startTime: '09:00', endTime: '17:00', isClosed: false },
-  tuesday: { startTime: '09:00', endTime: '17:00', isClosed: false },
-  wednesday: { startTime: '09:00', endTime: '17:00', isClosed: false },
-  thursday: { startTime: '09:00', endTime: '17:00', isClosed: false },
-  friday: { startTime: '09:00', endTime: '17:00', isClosed: false },
-  saturday: { startTime: '10:00', endTime: '14:00', isClosed: true },
-  sunday: { startTime: '10:00', endTime: '14:00', isClosed: true },
+  monday: { startTime: '08:30', endTime: '20:00', isClosed: false },
+  tuesday: { startTime: '08:30', endTime: '20:00', isClosed: false },
+  wednesday: { startTime: '08:30', endTime: '20:00', isClosed: false },
+  thursday: { startTime: '08:30', endTime: '20:00', isClosed: false },
+  friday: { startTime: '08:30', endTime: '20:00', isClosed: false },
+  saturday: { startTime: '09:00', endTime: '20:00', isClosed: false },
+  sunday: { startTime: '12:00', endTime: '15:00', isClosed: false },
 };
 
 function getDevAppointmentsStore() {
