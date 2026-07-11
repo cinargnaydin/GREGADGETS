@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getOptionalAdminDb } from '@/lib/firebase/firebase-admin';
+import { getOptionalSupabaseAdmin } from '@/lib/supabase/supabase-admin';
 import { getBusySlots } from '@/lib/google-calendar';
 import { listDevAppointmentBookingsForDay } from '@/lib/dev-store';
 import {
@@ -13,10 +13,6 @@ import {
 
 const APPOINTMENT_DURATION_MINUTES = 60; // Configurable duration
 
-type AppointmentData = {
-  startTime?: { toDate?: () => Date };
-  endTime?: { toDate?: () => Date };
-};
 type CalendarBusySlot = {
   start?: string | null;
   end?: string | null;
@@ -37,7 +33,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const adminDb = getOptionalAdminDb();
+    const supabase = getOptionalSupabaseAdmin();
 
     // 1. Resolve working hours (honours overrides + weekly schedule, shop TZ)
     const window = await resolveWorkingWindow(dateStr);
@@ -56,23 +52,25 @@ export async function GET(request: Request) {
       potentialSlots.push({ start, end });
     }
 
-    // 3. Fetch booked slots (single-field range query -> no composite index)
+    // 3. Fetch booked slots for the day (indexed on start_time)
     const { dayStart, dayEnd } = zonedDayBounds(dateStr);
-    const appointmentsSnapshot = adminDb
-      ? await adminDb.collection('appointments')
-          .where('startTime', '>=', dayStart)
-          .where('startTime', '<=', dayEnd)
-          .get()
-      : null;
+    let dbBookings: { start: Date; end: Date }[];
 
-    const firestoreBookings = appointmentsSnapshot
-      ? appointmentsSnapshot.docs.flatMap(doc => {
-          const data = doc.data() as AppointmentData;
-          const start = data.startTime?.toDate?.();
-          const end = data.endTime?.toDate?.();
-          return start && end ? [{ start, end }] : [];
-        })
-      : listDevAppointmentBookingsForDay(dayStart, dayEnd);
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('start_time,end_time')
+        .gte('start_time', dayStart.toISOString())
+        .lte('start_time', dayEnd.toISOString());
+      if (error) throw error;
+      dbBookings = (data ?? []).flatMap((row: { start_time?: string | null; end_time?: string | null }) => {
+        const start = row.start_time ? new Date(row.start_time) : null;
+        const end = row.end_time ? new Date(row.end_time) : null;
+        return start && end ? [{ start, end }] : [];
+      });
+    } else {
+      dbBookings = listDevAppointmentBookingsForDay(dayStart, dayEnd);
+    }
 
     // 4. Fetch Google Calendar busy times
     const gCalBusyTimes = await getBusySlots(dayStart.toISOString(), dayEnd.toISOString());
@@ -82,7 +80,7 @@ export async function GET(request: Request) {
     const availableSlots = potentialSlots.filter(slot => {
       if (slot.start < now) return false; // Don't show past slots
 
-      const hasDbConflict = firestoreBookings.some(booking =>
+      const hasDbConflict = dbBookings.some(booking =>
         slot.start < booking.end && slot.end > booking.start
       );
       if (hasDbConflict) return false;

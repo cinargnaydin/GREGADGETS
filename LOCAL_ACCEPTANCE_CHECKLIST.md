@@ -7,7 +7,7 @@ Use this before domain/DNS handover. The goal is to prove the website and bookin
 - Run `npm.cmd run dev`.
 - Open `http://localhost:3000`.
 - There is no admin panel for this website.
-- Without Firebase credentials, appointment and lead submissions use in-memory local storage. They reset when the dev server restarts.
+- Without Supabase credentials, appointment and lead submissions use in-memory local storage. They reset when the dev server restarts.
 - In development, real email/SMS sending is off unless `SEND_REAL_NOTIFICATIONS=true`.
 
 ## Must Pass Locally
@@ -37,7 +37,7 @@ These require accounts/credentials:
 - Resend: booking confirmation and owner notification emails arrive.
 - Set `SEND_REAL_NOTIFICATIONS=true` before testing real email/SMS delivery locally.
 - Google Calendar: booking creates a calendar event.
-- Firebase: appointments and leads persist after restarting the server.
+- Supabase: appointments and leads persist after restarting the server (run `supabase/schema.sql` once, then set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`).
 - Twilio: SMS confirmation sends to a real phone number, if SMS is included.
 
 ## Before Client Delivery

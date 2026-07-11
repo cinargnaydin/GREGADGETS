@@ -1,4 +1,4 @@
-import { getOptionalAdminDb } from '@/lib/firebase/firebase-admin';
+import { getOptionalSupabaseAdmin } from '@/lib/supabase/supabase-admin';
 
 export const LEAD_TYPES = ['repair', 'trade_in', 'contact', 'booking'] as const;
 export const LEAD_STAGES = ['new', 'contacted', 'booked', 'won', 'lost'] as const;
@@ -9,7 +9,7 @@ export type LeadType = (typeof LEAD_TYPES)[number];
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type LeadUrgency = (typeof LEAD_URGENCIES)[number];
 export type LeadPreferredContact = (typeof LEAD_PREFERRED_CONTACTS)[number];
-export type LeadStorage = 'firestore' | 'memory';
+export type LeadStorage = 'supabase' | 'memory';
 
 export type LeadInput = {
   type: LeadType;
@@ -39,7 +39,7 @@ export type LeadRecord = Omit<LeadInput, 'consent'> & {
 };
 
 type LeadUpdate = Partial<Pick<LeadRecord, 'stage' | 'preferredContact' | 'appointmentId' | 'notes'>>;
-type FirestoreData = Record<string, unknown>;
+type SupabaseRow = Record<string, unknown>;
 
 declare global {
   var __greenwichGadgetsDevLeads: LeadRecord[] | undefined;
@@ -72,30 +72,21 @@ function cleanInput(input: LeadInput): LeadInput {
 
 function timestampToIso(value: unknown) {
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'string' && value) return value;
-  if (
-    value &&
-    typeof value === 'object' &&
-    'toDate' in value &&
-    typeof value.toDate === 'function'
-  ) {
-    return value.toDate().toISOString();
-  }
-
+  if (typeof value === 'string' && value) return new Date(value).toISOString();
   return new Date().toISOString();
 }
 
-function stringValue(data: FirestoreData, key: string, fallback = '') {
+function stringValue(data: SupabaseRow, key: string, fallback = '') {
   const value = data[key];
   return typeof value === 'string' ? value : fallback;
 }
 
-function booleanValue(data: FirestoreData, key: string, fallback = false) {
+function booleanValue(data: SupabaseRow, key: string, fallback = false) {
   const value = data[key];
   return typeof value === 'boolean' ? value : fallback;
 }
 
-function recordValue(data: FirestoreData, key: string) {
+function recordValue(data: SupabaseRow, key: string) {
   const value = data[key];
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
 
@@ -106,59 +97,69 @@ function recordValue(data: FirestoreData, key: string) {
   );
 }
 
+// Drop keys whose value is undefined so we never write `undefined` into a column.
 function dropUndefined<T extends Record<string, unknown>>(data: T) {
   return Object.fromEntries(
     Object.entries(data).filter(([, value]) => value !== undefined)
   ) as Partial<T>;
 }
 
-function firestoreDocToLead(id: string, data: FirestoreData): LeadRecord {
+// Map a camelCase LeadInput into the snake_case Postgres row shape.
+function leadInputToRow(cleaned: LeadInput): SupabaseRow {
+  return dropUndefined({
+    type: cleaned.type,
+    source_page: cleaned.sourcePage,
+    source_url: cleaned.sourceUrl,
+    name: cleaned.name,
+    phone: cleaned.phone,
+    email: cleaned.email,
+    issue: cleaned.issue,
+    device: cleaned.device,
+    urgency: cleaned.urgency,
+    preferred_contact: cleaned.preferredContact ?? 'pending',
+    consent: cleaned.consent,
+    utm: cleaned.utm ?? {},
+  });
+}
+
+function supabaseRowToLead(data: SupabaseRow): LeadRecord {
   return {
-    id,
+    id: String(data.id),
     type: stringValue(data, 'type', 'repair') as LeadType,
-    sourcePage: stringValue(data, 'sourcePage') || undefined,
-    sourceUrl: stringValue(data, 'sourceUrl') || undefined,
+    sourcePage: stringValue(data, 'source_page') || undefined,
+    sourceUrl: stringValue(data, 'source_url') || undefined,
     name: stringValue(data, 'name') || undefined,
     phone: stringValue(data, 'phone'),
     email: stringValue(data, 'email') || undefined,
     issue: stringValue(data, 'issue'),
     device: stringValue(data, 'device') || undefined,
     urgency: stringValue(data, 'urgency', 'flexible') as LeadUrgency,
-    preferredContact: stringValue(data, 'preferredContact', 'pending') as LeadPreferredContact,
+    preferredContact: stringValue(data, 'preferred_contact', 'pending') as LeadPreferredContact,
     consent: booleanValue(data, 'consent', true),
     stage: stringValue(data, 'stage', 'new') as LeadStage,
-    appointmentId: stringValue(data, 'appointmentId') || undefined,
+    appointmentId: stringValue(data, 'appointment_id') || undefined,
     notes: stringValue(data, 'notes') || undefined,
     utm: recordValue(data, 'utm'),
-    createdAt: timestampToIso(data.createdAt),
-    updatedAt: timestampToIso(data.updatedAt),
-    storage: 'firestore',
+    createdAt: timestampToIso(data.created_at),
+    updatedAt: timestampToIso(data.updated_at),
+    storage: 'supabase',
   };
 }
 
 export async function createLead(input: LeadInput): Promise<LeadRecord> {
   const cleaned = cleanInput(input);
   const now = new Date();
-  const baseLead = {
-    ...cleaned,
-    stage: 'new' as LeadStage,
-    preferredContact: cleaned.preferredContact ?? 'pending',
-    createdAt: now,
-    updatedAt: now,
-  };
 
-  const db = getOptionalAdminDb();
+  const db = getOptionalSupabaseAdmin();
   if (db) {
-    const docRef = await db.collection('leads').add(dropUndefined(baseLead));
-    return {
-      ...cleaned,
-      id: docRef.id,
-      stage: 'new',
-      preferredContact: cleaned.preferredContact ?? 'pending',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      storage: 'firestore',
-    };
+    const { data, error } = await db
+      .from('leads')
+      .insert(leadInputToRow(cleaned))
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return supabaseRowToLead(data as SupabaseRow);
   }
 
   const lead: LeadRecord = {
@@ -176,27 +177,27 @@ export async function createLead(input: LeadInput): Promise<LeadRecord> {
 }
 
 export async function listLeads(limit = 100): Promise<LeadRecord[]> {
-  const db = getOptionalAdminDb();
+  const db = getOptionalSupabaseAdmin();
   if (db) {
-    const snapshot = await db
-      .collection('leads')
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
+    const { data, error } = await db
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-    return snapshot.docs.map((doc) => firestoreDocToLead(doc.id, doc.data() as FirestoreData));
+    if (error) throw error;
+    return (data as SupabaseRow[]).map(supabaseRowToLead);
   }
 
   return getDevLeads().slice(0, limit);
 }
 
 export async function getLead(id: string): Promise<LeadRecord | null> {
-  const db = getOptionalAdminDb();
+  const db = getOptionalSupabaseAdmin();
   if (db) {
-    const doc = await db.collection('leads').doc(id).get();
-    if (!doc.exists) return null;
-
-    return firestoreDocToLead(doc.id, doc.data() as FirestoreData);
+    const { data, error } = await db.from('leads').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? supabaseRowToLead(data as SupabaseRow) : null;
   }
 
   return getDevLeads().find((lead) => lead.id === id) ?? null;
@@ -204,24 +205,27 @@ export async function getLead(id: string): Promise<LeadRecord | null> {
 
 export async function updateLead(id: string, update: LeadUpdate): Promise<LeadRecord> {
   const now = new Date();
-  const cleanedUpdate: LeadUpdate & { updatedAt: Date } = {
-    ...update,
-    notes: cleanOptional(update.notes),
-    updatedAt: now,
-  };
 
-  const db = getOptionalAdminDb();
+  const db = getOptionalSupabaseAdmin();
   if (db) {
-    const docRef = db.collection('leads').doc(id);
-    const existing = await docRef.get();
+    const row = dropUndefined({
+      stage: update.stage,
+      preferred_contact: update.preferredContact,
+      appointment_id: update.appointmentId,
+      notes: cleanOptional(update.notes),
+      updated_at: now.toISOString(),
+    });
 
-    if (!existing.exists) {
-      throw new Error('Lead not found');
-    }
+    const { data, error } = await db
+      .from('leads')
+      .update(row)
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
 
-    await docRef.set(dropUndefined(cleanedUpdate), { merge: true });
-    const updated = await docRef.get();
-    return firestoreDocToLead(updated.id, updated.data() as FirestoreData);
+    if (error) throw error;
+    if (!data) throw new Error('Lead not found');
+    return supabaseRowToLead(data as SupabaseRow);
   }
 
   const leads = getDevLeads();

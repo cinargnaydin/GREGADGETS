@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getOptionalAdminDb } from '@/lib/firebase/firebase-admin';
+import { getOptionalSupabaseAdmin, PG_EXCLUSION_VIOLATION } from '@/lib/supabase/supabase-admin';
 import { createDevAppointment, hasDevAppointmentConflict } from '@/lib/dev-store';
 import { createCalendarEvent, deleteCalendarEvent, getBusySlots } from '@/lib/google-calendar';
 import { updateLead } from '@/lib/leads';
@@ -13,7 +13,6 @@ import {
   isValidTimeStr,
   resolveWorkingWindow,
   timeToMinutes,
-  zonedDayBounds,
   zonedWallClockToUtc,
 } from '@/lib/schedule';
 
@@ -72,7 +71,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Selected time is outside our opening hours.' }, { status: 409 });
     }
 
-    const adminDb = getOptionalAdminDb();
+    const supabase = getOptionalSupabaseAdmin();
 
     // Check external calendar availability before we commit anything
     const busySlots = await getBusySlots(startTime.toISOString(), endTime.toISOString());
@@ -86,43 +85,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Time slot is no longer available in calendar.' }, { status: 409 });
     }
 
-    // Persist the appointment FIRST (atomically for Firestore), then attach the
-    // calendar event. This ordering means a failed DB write can never leave an
-    // orphaned calendar event, and the atomic re-check prevents double-booking.
+    // Persist the appointment FIRST, then attach the calendar event. This
+    // ordering means a failed DB write can never leave an orphaned calendar
+    // event. Double-booking is prevented atomically by the Postgres exclusion
+    // constraint (overlapping range -> 23P01 -> mapped to a 409).
     let appointmentId: string;
 
-    if (adminDb) {
-      const { dayStart, dayEnd } = zonedDayBounds(date);
-      // Single-field range query -> no composite index required.
-      const dayQuery = adminDb
-        .collection('appointments')
-        .where('startTime', '>=', dayStart)
-        .where('startTime', '<=', dayEnd);
-
-      appointmentId = await adminDb.runTransaction(async (tx) => {
-        const snapshot = await tx.get(dayQuery);
-        const conflict = snapshot.docs.some((doc) => {
-          const data = doc.data() as { startTime?: { toDate?: () => Date }; endTime?: { toDate?: () => Date } };
-          const s = data.startTime?.toDate?.();
-          const e = data.endTime?.toDate?.();
-          return !!s && !!e && startTime < e && endTime > s;
-        });
-        if (conflict) throw new SlotConflictError();
-
-        const docRef = adminDb.collection('appointments').doc();
-        tx.set(docRef, {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('appointments')
+        .insert({
           name,
           email,
           phone,
           ...(issue ? { issue } : {}),
-          ...(leadId ? { leadId } : {}),
-          startTime,
-          endTime,
-          calendarEventId: null,
-          createdAt: new Date(),
-        });
-        return docRef.id;
-      });
+          ...(leadId ? { lead_id: leadId } : {}),
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          calendar_event_id: null,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        if (error.code === PG_EXCLUSION_VIOLATION) throw new SlotConflictError();
+        throw error;
+      }
+      appointmentId = String(data.id);
     } else {
       if (hasDevAppointmentConflict(startTime, endTime)) {
         return NextResponse.json({ error: 'Time slot is no longer available.' }, { status: 409 });
@@ -159,8 +148,11 @@ export async function POST(request: Request) {
         eventDesc
       );
       calendarEventId = calendarEvent?.id || null;
-      if (calendarEventId && adminDb) {
-        await adminDb.collection('appointments').doc(appointmentId).update({ calendarEventId });
+      if (calendarEventId && supabase) {
+        await supabase
+          .from('appointments')
+          .update({ calendar_event_id: calendarEventId })
+          .eq('id', appointmentId);
       }
     } catch (calendarError) {
       // If linking the event to the appointment failed, remove the stray event.
@@ -218,7 +210,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       appointmentId,
-      fallback: !adminDb,
+      fallback: !supabase,
       notifications: sendRealNotifications ? 'sent-if-configured' : 'preview-only',
     });
 

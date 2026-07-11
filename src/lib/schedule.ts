@@ -1,4 +1,4 @@
-import { getOptionalAdminDb } from '@/lib/firebase/firebase-admin';
+import { getOptionalSupabaseAdmin } from '@/lib/supabase/supabase-admin';
 import { getDevScheduleOverride, getDevScheduleSettings } from '@/lib/dev-store';
 
 // The shop physically operates in London. Slot generation, working-hours checks
@@ -101,25 +101,37 @@ type DayScheduleData = {
   endTime?: string | null;
 };
 
+// Map a snake_case schedule row (settings or override) to the internal shape.
+function rowToDaySchedule(row: Record<string, unknown> | null | undefined): DayScheduleData | undefined {
+  if (!row) return undefined;
+  return {
+    isClosed: typeof row.is_closed === 'boolean' ? row.is_closed : false,
+    startTime: typeof row.start_time === 'string' ? row.start_time : null,
+    endTime: typeof row.end_time === 'string' ? row.end_time : null,
+  };
+}
+
 // Resolves the working window for a date, honouring per-date overrides then the
-// weekly schedule, from Firestore in production or the dev store locally. Shared
+// weekly schedule, from Supabase in production or the dev store locally. Shared
 // by the available-slots and booking routes so they can never disagree.
 export async function resolveWorkingWindow(dateStr: string): Promise<WorkingWindow> {
   const dayOfWeek = weekdayInZone(dateStr);
-  const adminDb = getOptionalAdminDb();
+  const supabase = getOptionalSupabaseAdmin();
 
-  let settings: Record<string, DayScheduleData | undefined>;
+  let day: DayScheduleData | undefined;
   let override: DayScheduleData | undefined;
 
-  if (adminDb) {
-    const [settingsDoc, overrideDoc] = await Promise.all([
-      adminDb.collection('schedule_settings').doc('default').get(),
-      adminDb.collection('schedule_overrides').doc(dateStr).get(),
+  if (supabase) {
+    const [overrideResult, settingResult] = await Promise.all([
+      supabase.from('schedule_overrides').select('*').eq('date', dateStr).maybeSingle(),
+      supabase.from('schedule_settings').select('*').eq('day_of_week', dayOfWeek).maybeSingle(),
     ]);
-    settings = (settingsDoc.data() || {}) as Record<string, DayScheduleData | undefined>;
-    override = overrideDoc.data() as DayScheduleData | undefined;
+    if (overrideResult.error) throw overrideResult.error;
+    if (settingResult.error) throw settingResult.error;
+    override = rowToDaySchedule(overrideResult.data as Record<string, unknown> | null);
+    day = rowToDaySchedule(settingResult.data as Record<string, unknown> | null);
   } else {
-    settings = getDevScheduleSettings();
+    day = getDevScheduleSettings()[dayOfWeek];
     override = getDevScheduleOverride(dateStr);
   }
 
@@ -130,7 +142,6 @@ export async function resolveWorkingWindow(dateStr: string): Promise<WorkingWind
     return { isClosed: false, startTime: override.startTime, endTime: override.endTime };
   }
 
-  const day = settings[dayOfWeek];
   if (day?.isClosed) {
     return { isClosed: true, startTime: DEFAULT_START_TIME, endTime: DEFAULT_END_TIME };
   }
