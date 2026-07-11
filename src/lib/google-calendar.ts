@@ -12,21 +12,43 @@ const auth = new google.auth.GoogleAuth({
 
 const calendar = google.calendar({ version: 'v3', auth });
 
+// Returns the busy time ranges on the calendar between timeMin and timeMax.
+//
+// We deliberately use events.list instead of freebusy.query: freebusy collapses
+// everything into opaque busy blocks and reports ALL-DAY events (leave, "busy"
+// day markers, some synced entries) as busy for the whole day. On a personal or
+// shared calendar that means a single all-day entry wipes out every bookable
+// slot. events.list lets us keep only genuine *timed*, busy (opaque) conflicts:
+//   - all-day events (have `start.date`, no `start.dateTime`) are ignored
+//   - events marked free / transparent are ignored
+//   - cancelled events and non-blocking types (working location) are ignored
 export async function getBusySlots(timeMin: string, timeMax: string) {
   if (!calendarId) return [];
 
   try {
-    const response = await calendar.freebusy.query({
-      requestBody: {
-        timeMin,
-        timeMax,
-        timeZone: 'UTC', // Will assume UTC, format input properly
-        items: [{ id: calendarId }],
-      },
+    const response = await calendar.events.list({
+      calendarId,
+      timeMin,
+      timeMax,
+      singleEvents: true, // expand recurring events into individual instances
+      orderBy: 'startTime',
+      maxResults: 2500,
     });
 
-    const busy = response.data.calendars?.[calendarId]?.busy || [];
-    return busy;
+    const items = response.data.items || [];
+
+    return items.flatMap((event) => {
+      if (event.status === 'cancelled') return [];
+      if (event.transparency === 'transparent') return []; // marked "free"
+      if (event.eventType === 'workingLocation') return []; // never blocks time
+
+      const start = event.start?.dateTime;
+      const end = event.end?.dateTime;
+      // No dateTime => all-day event (start.date only). These must not block the day.
+      if (!start || !end) return [];
+
+      return [{ start, end }];
+    });
   } catch (error) {
     console.error('Error fetching Google Calendar busy slots:', error);
     return [];
