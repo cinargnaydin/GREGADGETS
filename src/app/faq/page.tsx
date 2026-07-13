@@ -3,7 +3,6 @@ import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { buildMetadata } from "@/lib/seo";
-import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
 const faqs = [
   {
@@ -31,7 +30,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function FaqPage() {
-  const bookingHref = getLeadFunnelHref("/book");
+  const bookingHref = "/book";
 
   return (
     <div className="py-14 md:py-16">

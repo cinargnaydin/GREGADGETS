@@ -7,7 +7,7 @@ Use this before domain/DNS handover. The goal is to prove the website and bookin
 - Run `npm.cmd run dev`.
 - Open `http://localhost:3000`.
 - There is no admin panel for this website.
-- Without Supabase credentials, appointment and lead submissions use in-memory local storage. They reset when the dev server restarts.
+- Without `GOOGLE_CALENDAR_ID`, appointment submissions use in-memory local storage. They reset when the dev server restarts.
 - In development, real email/SMS sending is off unless `SEND_REAL_NOTIFICATIONS=true`.
 
 ## Must Pass Locally
@@ -26,8 +26,8 @@ Use this before domain/DNS handover. The goal is to prove the website and bookin
 - Booking page shows available time slots.
 - Booking submission returns success from `/api/appointments/book`.
 - A booked local memory slot disappears from later availability results.
-- Quote form submission returns success from `/api/quote`.
-- Lead funnel submission returns success from `/api/leads` when enabled.
+- Contact and Repair Services pages show phone/WhatsApp CTAs (no quote form).
+- `/get-started` permanently redirects to `/book`.
 - Call, WhatsApp, and Directions links open the expected targets.
 
 ## Real Service Checks
@@ -36,8 +36,8 @@ These require accounts/credentials:
 
 - Resend: booking confirmation and owner notification emails arrive.
 - Set `SEND_REAL_NOTIFICATIONS=true` before testing real email/SMS delivery locally.
-- Google Calendar: booking creates a calendar event.
-- Supabase: appointments and leads persist after restarting the server (run `supabase/schema.sql` once, then set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`).
+- Google Calendar (the booking backend): with `GOOGLE_CALENDAR_ID` + `GOOGLE_CALENDAR_CLIENT_EMAIL` + `GOOGLE_CALENDAR_PRIVATE_KEY` set, a booking creates a timed calendar event, and that slot then disappears for the next visitor.
+- Google Calendar closures: an all-day "CLOSED" (or "KAPALI") event marks that date closed in `/api/appointments/available-slots`.
 - Twilio: SMS confirmation sends to a real phone number, if SMS is included.
 
 ## Before Client Delivery

@@ -14,7 +14,10 @@ Set these in Vercel project settings:
 
 - `NEXT_PUBLIC_SITE_URL=https://greenwichgadgets.com`
 - `RESEND_API_KEY=...`
-- `QUOTE_RECEIVER_EMAIL=...`
+- `BOOKING_NOTIFICATION_EMAIL=...`
+- `GOOGLE_CALENDAR_ID=...`
+- `GOOGLE_CALENDAR_CLIENT_EMAIL=...`
+- `GOOGLE_CALENDAR_PRIVATE_KEY=...` (service account shared into the bookings calendar with "Make changes to events")
 
 ## 3) Vercel Deployment
 1. Import the repository into Vercel.
@@ -25,7 +28,7 @@ Set these in Vercel project settings:
 ## 4) Post-Deploy Validation
 - Open `/sitemap.xml` and `/robots.txt`.
 - Submit sitemap in Google Search Console.
-- Test contact quote form end-to-end.
+- Complete a test booking on `/book` end-to-end and confirm the event appears on the Google Calendar.
 - Verify call/WhatsApp/map buttons on mobile.
 - Confirm structured data with Rich Results Test.
 
@@ -48,7 +51,10 @@ Set the following in Vercel project settings:
 
 - `NEXT_PUBLIC_SITE_URL` = production domain (e.g. `https://greenwichgadgets.com`)
 - `RESEND_API_KEY` = Resend API key
-- `QUOTE_RECEIVER_EMAIL` = destination mailbox for quote requests
+- `BOOKING_NOTIFICATION_EMAIL` = destination mailbox for booking notifications
+- `GOOGLE_CALENDAR_ID` = bookings calendar ID
+- `GOOGLE_CALENDAR_CLIENT_EMAIL` = service account email
+- `GOOGLE_CALENDAR_PRIVATE_KEY` = service account private key
 
 ## 3) Domain and DNS
 
@@ -59,8 +65,8 @@ Set the following in Vercel project settings:
 ## 4) Post-Deploy Verification
 
 1. Open `/` and verify hero, logo, and glowing CTA buttons.
-2. Open `/contact` and submit a test quote request.
-3. Confirm test email arrives at `QUOTE_RECEIVER_EMAIL`.
+2. Open `/book` and complete a test booking.
+3. Confirm the booking notification email arrives at `BOOKING_NOTIFICATION_EMAIL` and the event appears on the Google Calendar.
 4. Verify:
    - `/sitemap.xml`
    - `/robots.txt`

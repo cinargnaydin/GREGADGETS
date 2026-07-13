@@ -891,9 +891,7 @@ Local project sources:
 - `src/app/api/appointments/book/route.ts`
 - `src/app/api/appointments/available-slots/route.ts`
 - `src/lib/google-calendar.ts`
-- `src/app/api/quote/route.ts`
-- `src/app/admin/(dashboard)/page.tsx`
-- `src/app/admin/(dashboard)/schedule/page.tsx`
+- `src/content/schedule.ts`
 
 No PDF files were found in the Greenwich Gadgets project folder during this review.
 

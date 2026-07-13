@@ -6,11 +6,10 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import GlowButton from "@/components/ui/GlowButton";
 import { navLinks } from "@/content/site";
-import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const bookingHref = getLeadFunnelHref("/book");
+  const bookingHref = "/book";
 
   return (
     <header className="sticky top-0 z-40 border-b border-black/5 bg-white/70 backdrop-blur-xl">

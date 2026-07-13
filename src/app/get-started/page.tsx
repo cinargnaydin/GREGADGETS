@@ -1,25 +1,7 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import LeadFunnel from "@/components/site/LeadFunnel";
-import { buildMetadata } from "@/lib/seo";
-import { isLeadFunnelEnabled } from "@/lib/lead-funnel";
+import { permanentRedirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = buildMetadata({
-  title: "Get a Quote or Book Repair | Greenwich Gadgets",
-  description: "Start a repair request with Greenwich Gadgets.",
-  path: "/get-started",
-});
-
+// The lead funnel was removed; booking now lives at /book. Keep this route as a
+// permanent (308) redirect so old links, bookmarks and indexed URLs still work.
 export default function GetStartedPage() {
-  if (!isLeadFunnelEnabled && process.env.NODE_ENV === "production") {
-    notFound();
-  }
-
-  return (
-    <div className="min-h-screen bg-white px-4 py-12 sm:px-6 lg:px-8">
-      <LeadFunnel sourcePage="get-started" />
-    </div>
-  );
+  permanentRedirect("/book");
 }

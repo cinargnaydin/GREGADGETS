@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import { siteConfig } from "@/content/site";
@@ -21,26 +22,31 @@ export default function ShopPage() {
           </p>
         </div>
 
-        {/* Shop interior photos — coming soon */}
+        {/* Shop interior photos */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="glass-panel flex h-64 items-center justify-center rounded-3xl p-2 md:h-80">
-            <span className="text-sm font-semibold text-muted">Images coming soon</span>
+          <div className="glass-panel relative h-64 overflow-hidden rounded-3xl p-2 md:h-80">
+            <Image
+              src="/images/shopinterior3.jpg"
+              alt="Inside Greenwich Gadgets — accessories, audio, and gifts on display"
+              fill
+              sizes="(max-width: 640px) 100vw, 50vw"
+              className="rounded-2xl object-cover"
+            />
           </div>
           <div className="glass-panel flex h-64 items-center justify-center rounded-3xl p-2 md:h-80">
             <span className="text-sm font-semibold text-muted">Images coming soon</span>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
           {[
-            ["Cases & Protectors", "Tempered glass and durable protection options."],
-            ["Chargers & Cables", "Reliable charging accessories for daily use."],
-            ["Audio Accessories", "Earphones and practical audio add-ons."],
-            ["Perfumes", "Popular fragrance options mentioned by local customers."],
-            ["Puffs / Vapes", "Adult-only products. Age checks apply in-store."],
-            ["Gifts", "Small useful gadgets and gift-ready items."],
-          ].map(([title, text]) => (
-            <article key={title} className="premium-card rounded-2xl p-5">
+            ["Cases & Protectors", "Tempered glass and durable protection options.", "lg:col-span-2"],
+            ["Chargers & Cables", "Reliable charging accessories for daily use.", "lg:col-span-2"],
+            ["Audio Accessories", "Earphones and practical audio add-ons.", "lg:col-span-2"],
+            ["Perfumes", "Popular fragrance options mentioned by local customers.", "lg:col-span-3"],
+            ["Gifts", "Small useful gadgets and gift-ready items.", "md:col-span-2 lg:col-span-3"],
+          ].map(([title, text, span]) => (
+            <article key={title} className={`premium-card rounded-2xl p-5 ${span}`}>
               <h2 className="text-lg font-bold tracking-tight">{title}</h2>
               <p className="mt-2 text-sm text-muted">{text}</p>
             </article>

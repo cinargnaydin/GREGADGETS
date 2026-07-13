@@ -2,10 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import { siteConfig } from "@/content/site";
-import { getLeadFunnelHref } from "@/lib/lead-funnel";
 
 export default function HeroExperiment() {
-  const bookingHref = getLeadFunnelHref("/book");
+  const bookingHref = "/book";
 
   return (
     <div className="container-base">

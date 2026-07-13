@@ -3,7 +3,7 @@
 ## Core Functionality
 - [ ] Homepage loads with hero, trust sections, testimonials, and CTA buttons.
 - [ ] Navigation links work on all pages.
-- [ ] Quote form validates and sends payload to `/api/quote`.
+- [ ] Booking flow (`/book`) completes: issue → date → time → details → success.
 - [ ] Call, WhatsApp, and Directions links are clickable on mobile and desktop.
 
 ## Content and Brand
@@ -32,7 +32,10 @@
 - [ ] Environment variables are set in production:
   - `NEXT_PUBLIC_SITE_URL`
   - `RESEND_API_KEY`
-  - `QUOTE_RECEIVER_EMAIL`
+  - `BOOKING_NOTIFICATION_EMAIL`
+  - `GOOGLE_CALENDAR_ID`
+  - `GOOGLE_CALENDAR_CLIENT_EMAIL`
+  - `GOOGLE_CALENDAR_PRIVATE_KEY`
 - [ ] Analytics is enabled (`@vercel/analytics`).
 - [ ] Error monitoring is configured (recommended: Sentry).
 
@@ -47,8 +50,12 @@
 - [ ] All required env vars are set:
   - `NEXT_PUBLIC_SITE_URL`
   - `RESEND_API_KEY`
-  - `QUOTE_RECEIVER_EMAIL`
-- [ ] API endpoint `/api/quote` returns 200 for valid payload.
+  - `BOOKING_NOTIFICATION_EMAIL`
+  - `GOOGLE_CALENDAR_ID`
+  - `GOOGLE_CALENDAR_CLIENT_EMAIL`
+  - `GOOGLE_CALENDAR_PRIVATE_KEY`
+- [ ] API endpoint `/api/appointments/book` returns 200 for a valid payload.
+- [ ] Booking service account is shared into the calendar with "Make changes to events".
 - [ ] Security headers are present in response (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`).
 
 ## Content and UX Checks

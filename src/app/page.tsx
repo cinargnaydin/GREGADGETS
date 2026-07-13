@@ -4,12 +4,10 @@ import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import TestimonialSlider from "@/components/site/TestimonialSlider";
 import HeroExperiment from "@/components/site/HeroExperiment";
-import RepairIssueQuickForm from "@/components/site/RepairIssueQuickForm";
 import JsonLd from "@/components/seo/JsonLd";
 import Reveal from "@/components/ui/Reveal";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
-import { getLeadFunnelHref, isLeadFunnelEnabled } from "@/lib/lead-funnel";
 
 export const metadata: Metadata = buildMetadata({
   title: siteConfig.title,
@@ -41,7 +39,7 @@ const serviceCards = [
 ];
 
 export default function Home() {
-  const bookingHref = getLeadFunnelHref("/book");
+  const bookingHref = "/book";
 
   return (
     <div className="pb-8">
@@ -89,19 +87,13 @@ export default function Home() {
             <div>
               <h2 className="text-3xl font-bold tracking-tight">Repair by issue</h2>
               <p className="mt-3 text-sm text-muted">
-                Pick your issue, enter phone number, and submit. We will get back quickly with a quote.
+                Pick your issue and choose a time — or message us on WhatsApp for a quick quote.
               </p>
-              <div className="mt-4">
-                {isLeadFunnelEnabled ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted">
-                      Tell us what needs fixing and choose how to continue — book a repair slot, get a quick WhatsApp quote, or request a callback.
-                    </p>
-                    <GlowButton href={bookingHref}>Start Repair Request</GlowButton>
-                  </div>
-                ) : (
-                  <RepairIssueQuickForm />
-                )}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <GlowButton href={bookingHref}>Book a Repair</GlowButton>
+                <GlowButton href={siteConfig.contact.whatsappHref} target="_blank">
+                  WhatsApp Quote
+                </GlowButton>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">

@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
-import QuoteForm from "@/components/site/QuoteForm";
 import JsonLd from "@/components/seo/JsonLd";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 import { breadcrumbSchema } from "@/lib/schema";
-import { getLeadFunnelHref, isLeadFunnelEnabled } from "@/lib/lead-funnel";
 
 export const metadata: Metadata = buildMetadata({
   title: "Repair Services | Greenwich Gadgets",
@@ -15,7 +13,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function RepairServicesPage() {
-  const bookingHref = getLeadFunnelHref("/book");
+  const bookingHref = "/book";
 
   return (
     <>
@@ -68,19 +66,13 @@ export default function RepairServicesPage() {
                 </Link>
               </div>
             </div>
-            {isLeadFunnelEnabled ? (
-              <div className="glass-panel rounded-2xl p-5">
-                <p className="font-semibold">One quick repair request</p>
-                <p className="mt-1 text-sm text-muted">
-                  Pick your issue, then choose to book a repair slot, get a WhatsApp quote, or request a callback.
-                </p>
-                <div className="mt-4">
-                  <GlowButton href={bookingHref}>Start Repair Request</GlowButton>
-                </div>
-              </div>
-            ) : (
-              <QuoteForm />
-            )}
+            <div className="glass-panel rounded-2xl p-5">
+              <p className="font-semibold">How booking works</p>
+              <p className="mt-1 text-sm text-muted">
+                Pick your issue and a time slot, add your contact details, and we confirm by email.
+                Prefer to talk first? Message us on WhatsApp for a quick quote.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,17 @@
 # Greenwich Gadgets Admin Panel MVP Technical Plan
 
+> ⚠️ **SUPERSEDED — historical reference only.** This plan predates the migration
+> to a **Google Calendar-only** booking backend. Supabase has been removed from
+> the project entirely: there is no `leads`/`appointments`/schedule table, no
+> Supabase Auth, and no lead funnel or quote form. The **Google Calendar is now
+> the single source of truth** — timed events are bookings, all-day "CLOSED"
+> events mark closures, and weekly opening hours live in `src/content/schedule.ts`
+> (`WEEKLY_HOURS`). Everything below (Supabase tables, RLS, `/api/leads`,
+> `/api/quote`, the lead pipeline) is **obsolete** and describes an approach that
+> was not taken. If an admin panel is built in future it must be re-specced
+> against the calendar architecture — see `CUSTOMER_AND_OWNER_FLOWS.md` for the
+> current shipped design.
+
 ## 1. Goal
 
 Build a practical admin panel that lets the shop owner manage the website's core business operations without touching code.

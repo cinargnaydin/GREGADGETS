@@ -19,11 +19,17 @@ export const siteConfig = {
     email: "hello@greenwichgadgets.com",
     mapsHref: "https://maps.google.com/?q=267+Greenwich+High+Rd+London+SE10+8NB",
   },
+  // Hand-maintained opening hours shown across the site. Bookings themselves are
+  // handled by the embedded Google Appointment Scheduling page (bookingScheduleUrl),
+  // which owns its own availability — keep these in sync with that schedule manually.
   hours: [
-    { day: "Mon-Fri", hours: "09:30 - 19:00" },
-    { day: "Saturday", hours: "10:00 - 18:00" },
-    { day: "Sunday", hours: "11:00 - 17:00" },
+    { day: "Mon-Fri", hours: "08:30 - 20:00" },
+    { day: "Saturday", hours: "09:00 - 20:00" },
+    { day: "Sunday", hours: "12:00 - 15:00" },
   ],
+  // Google Calendar Appointment Scheduling page embedded on /book.
+  bookingScheduleUrl:
+    "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1stn89FY_MKMXe_cx9HyvHYY45DEPkysAf6m1EhFJj61oF4agp1B8134W4LDEk5WNe5E52Oyrq?gv=true",
   trustPoints: [
     "Same-Day Repairs",
     "No-Obligation Quote",
