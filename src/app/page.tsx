@@ -96,20 +96,13 @@ export default function Home() {
                 </GlowButton>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div>
               <Image
-                src="/images/repair-tech.jpg"
-                alt="Technician repairing smartphone components"
+                src="/images/workbench-repair.jpg"
+                alt="Technician repairing a phone at the Greenwich Gadgets workbench"
                 width={600}
                 height={600}
-                className="rounded-2xl border border-white/60 object-cover"
-              />
-              <Image
-                src="/images/cracked-screen-closeup.jpg"
-                alt="Cracked smartphone screen closeup before repair"
-                width={600}
-                height={600}
-                className="rounded-2xl border border-white/60 object-cover"
+                className="h-72 w-full rounded-2xl border border-white/60 object-cover md:h-96"
               />
             </div>
           </div>

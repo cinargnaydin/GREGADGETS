@@ -33,8 +33,14 @@ export default function ShopPage() {
               className="rounded-2xl object-cover"
             />
           </div>
-          <div className="glass-panel flex h-64 items-center justify-center rounded-3xl p-2 md:h-80">
-            <span className="text-sm font-semibold text-muted">Images coming soon</span>
+          <div className="glass-panel relative h-64 overflow-hidden rounded-3xl p-2 md:h-80">
+            <Image
+              src="/images/shopinterior4.jpg"
+              alt="Inside Greenwich Gadgets — gaming consoles, controllers, phone accessories, and travel luggage"
+              fill
+              sizes="(max-width: 640px) 100vw, 50vw"
+              className="rounded-2xl object-cover"
+            />
           </div>
         </div>
 

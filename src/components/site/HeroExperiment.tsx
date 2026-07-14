@@ -89,7 +89,7 @@ export default function HeroExperiment() {
 
           <article className="glass-panel overflow-hidden rounded-3xl p-2">
             <Image
-              src="/images/cracked-screen-closeup.jpg"
+              src="/images/cracked-screen.jpg"
               alt="Cracked smartphone screen closeup before repair"
               width={900}
               height={900}
