@@ -5,6 +5,7 @@ import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 import { breadcrumbSchema } from "@/lib/schema";
 import GlowButton from "@/components/ui/GlowButton";
+import PhotoTile from "@/components/site/PhotoTile";
 
 export const metadata: Metadata = buildMetadata({
   title: "Contact & Find Us | Greenwich Gadgets",
@@ -67,16 +68,25 @@ export default function ContactPage() {
             </Link>
           </div>
         </div>
-        <div className="glass-panel h-fit rounded-3xl p-6">
-          <h2 className="text-2xl font-bold tracking-tight">Book a repair</h2>
-          <p className="mt-2 text-sm text-muted">
-            Pick your issue and a time slot online, or message us on WhatsApp for a quick quote.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <GlowButton href="/book">Book a Repair</GlowButton>
-            <GlowButton href={siteConfig.contact.whatsappHref} target="_blank">
-              WhatsApp Quote
-            </GlowButton>
+        <div className="space-y-5">
+          <PhotoTile
+            src="/images/shopexterior.png"
+            alt="Greenwich Gadgets storefront on Greenwich High Road — look for the red sign"
+            caption="Find us on Greenwich High Road"
+            className="h-64 md:h-72"
+            sizes="(max-width: 768px) 100vw, 45vw"
+          />
+          <div className="glass-panel h-fit rounded-3xl p-6">
+            <h2 className="text-2xl font-bold tracking-tight">Book a repair</h2>
+            <p className="mt-2 text-sm text-muted">
+              Pick your issue and a time slot online, or message us on WhatsApp for a quick quote.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <GlowButton href="/book">Book a Repair</GlowButton>
+              <GlowButton href={siteConfig.contact.whatsappHref} target="_blank">
+                WhatsApp Quote
+              </GlowButton>
+            </div>
           </div>
         </div>
       </div>

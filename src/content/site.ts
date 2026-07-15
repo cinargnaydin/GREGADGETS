@@ -15,21 +15,16 @@ export const siteConfig = {
     phoneHref: "tel:+447340327305",
     phone2Display: "07562 720358",
     phone2Href: "tel:+447562720358",
-    whatsappHref: "https://wa.me/447562720358",
+    whatsappHref: "https://wa.me/447340327305",
     email: "hello@greenwichgadgets.com",
     mapsHref: "https://maps.google.com/?q=267+Greenwich+High+Rd+London+SE10+8NB",
   },
-  // Hand-maintained opening hours shown across the site. Bookings themselves are
-  // handled by the embedded Google Appointment Scheduling page (bookingScheduleUrl),
-  // which owns its own availability — keep these in sync with that schedule manually.
+  // Hand-maintained opening hours shown across the site.
   hours: [
     { day: "Mon-Fri", hours: "08:30 - 20:00" },
     { day: "Saturday", hours: "09:00 - 20:00" },
     { day: "Sunday", hours: "12:00 - 15:00" },
   ],
-  // Google Calendar Appointment Scheduling page embedded on /book.
-  bookingScheduleUrl:
-    "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1stn89FY_MKMXe_cx9HyvHYY45DEPkysAf6m1EhFJj61oF4agp1B8134W4LDEk5WNe5E52Oyrq?gv=true",
   trustPoints: [
     "Same-Day Repairs",
     "No-Obligation Quote",
@@ -43,6 +38,19 @@ export const siteConfig = {
     "Camera / Face ID",
     "Water Damage",
     "Data Transfer",
+  ],
+  // Suggestions for the booking form's "Phone brand" field (free text, not a hard list).
+  phoneBrands: [
+    "Apple iPhone",
+    "Samsung",
+    "Google Pixel",
+    "Huawei",
+    "Xiaomi",
+    "OnePlus",
+    "Sony",
+    "Motorola",
+    "Nokia",
+    "Oppo",
   ],
 };
 

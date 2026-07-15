@@ -26,7 +26,7 @@ export default async function BookAppointmentPage({ searchParams }: BookAppointm
           Schedule Your Visit
         </h1>
         <p className="text-gray-500 text-center max-w-xl mx-auto">
-          Tell us what needs fixing, then pick a time that suits you. You&apos;ll get a confirmation once your booking is complete.
+          Tell us your number, your phone, what&apos;s broken, and the day you&apos;d like it fixed. We&apos;ll get back to you to confirm.
         </p>
       </div>
 

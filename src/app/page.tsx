@@ -4,6 +4,7 @@ import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
 import TestimonialSlider from "@/components/site/TestimonialSlider";
 import HeroExperiment from "@/components/site/HeroExperiment";
+import PhotoTile from "@/components/site/PhotoTile";
 import JsonLd from "@/components/seo/JsonLd";
 import Reveal from "@/components/ui/Reveal";
 import { siteConfig } from "@/content/site";
@@ -17,7 +18,7 @@ export const metadata: Metadata = buildMetadata({
 
 const serviceCards = [
   {
-    title: "Phone & Tablet Repair",
+    title: "Phone Repair",
     text: "Screen, battery, charging port, camera, and water damage support.",
     href: "/repair-services",
   },
@@ -44,9 +45,9 @@ export default function Home() {
   return (
     <div className="pb-8">
       <section className="pt-14 pb-8 md:pt-18">
-        <Reveal>
-          <HeroExperiment />
-        </Reveal>
+        {/* Hero renders statically (no fade-in) so the LCP element paints on
+            first render instead of waiting for client JS — fixes NO_LCP. */}
+        <HeroExperiment />
       </section>
 
       <section className="py-8">
@@ -77,6 +78,69 @@ export default function Home() {
                 </article>
               </Link>
             ))}
+          </div>
+        </Reveal>
+      </section>
+
+      <section className="py-14">
+        <Reveal direction="up" className="container-base" delay={0.08}>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-red-dark">
+                Greenwich High Road
+              </p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Step inside the shop</h2>
+              <p className="mt-2 max-w-xl text-sm text-muted">
+                Repairs, accessories, audio, gaming and travel essentials — all under one roof in the
+                heart of Greenwich.
+              </p>
+            </div>
+            <Link
+              href="/shop"
+              className="glass-panel rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5"
+            >
+              Browse the shop →
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <PhotoTile
+              src="/images/shopinterior2.png"
+              alt="Greenwich Gadgets interior — phone cases and accessory display cabinets"
+              caption="Accessories & display cases"
+              className="h-72 md:h-[27rem]"
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+            <div className="grid gap-4 sm:grid-cols-2 md:col-span-2">
+              <PhotoTile
+                src="/images/shopinterior.png"
+                alt="Greenwich Gadgets interior — accessory wall, headphones and travel bags"
+                caption="Cases, audio & more"
+                className="h-52 md:h-[13rem]"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+              <PhotoTile
+                src="/images/shopinterior4.jpg"
+                alt="Greenwich Gadgets interior — gaming consoles, controllers and travel luggage"
+                caption="Gaming & travel"
+                className="h-52 md:h-[13rem]"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+              <PhotoTile
+                src="/images/repair-tech.jpg"
+                alt="Technician carefully repairing a smartphone at the workbench"
+                caption="Expert same-day repairs"
+                className="h-52 md:h-[13rem]"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+              <PhotoTile
+                src="/images/shopinterior3.jpg"
+                alt="Greenwich Gadgets interior — counter and everyday tech essentials"
+                caption="Everyday essentials"
+                className="h-52 md:h-[13rem]"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            </div>
           </div>
         </Reveal>
       </section>

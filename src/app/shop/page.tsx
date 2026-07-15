@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
+import PhotoTile from "@/components/site/PhotoTile";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 
@@ -23,25 +23,35 @@ export default function ShopPage() {
         </div>
 
         {/* Shop interior photos */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="glass-panel relative h-64 overflow-hidden rounded-3xl p-2 md:h-80">
-            <Image
-              src="/images/shopinterior3.jpg"
-              alt="Inside Greenwich Gadgets — accessories, audio, and gifts on display"
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="rounded-2xl object-cover"
-            />
-          </div>
-          <div className="glass-panel relative h-64 overflow-hidden rounded-3xl p-2 md:h-80">
-            <Image
-              src="/images/shopinterior4.jpg"
-              alt="Inside Greenwich Gadgets — gaming consoles, controllers, phone accessories, and travel luggage"
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="rounded-2xl object-cover"
-            />
-          </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <PhotoTile
+            src="/images/shopinterior.png"
+            alt="Inside Greenwich Gadgets — accessory wall, headphones and travel bags"
+            caption="Accessories & audio wall"
+            className="h-56 sm:h-64"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
+          <PhotoTile
+            src="/images/shopinterior2.png"
+            alt="Inside Greenwich Gadgets — phone and gadget display cabinets"
+            caption="Phone & gadget displays"
+            className="h-56 sm:h-64"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
+          <PhotoTile
+            src="/images/shopinterior3.jpg"
+            alt="Inside Greenwich Gadgets — counter, accessories, audio, and gifts on display"
+            caption="Counter & essentials"
+            className="h-56 sm:h-64"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
+          <PhotoTile
+            src="/images/shopinterior4.jpg"
+            alt="Inside Greenwich Gadgets — gaming consoles, controllers, and travel luggage"
+            caption="Gaming & travel corner"
+            className="h-56 sm:h-64"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-6">

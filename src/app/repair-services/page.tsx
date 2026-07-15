@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
+import PhotoTile from "@/components/site/PhotoTile";
 import JsonLd from "@/components/seo/JsonLd";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
@@ -8,7 +9,7 @@ import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = buildMetadata({
   title: "Repair Services | Greenwich Gadgets",
-  description: "Phone, tablet, and laptop repair services in Greenwich with fast turnaround.",
+  description: "Phone repair services in Greenwich with fast turnaround.",
   path: "/repair-services",
 });
 
@@ -51,6 +52,13 @@ export default function RepairServicesPage() {
             </div>
           </div>
           <div className="space-y-4">
+            <PhotoTile
+              src="/images/cracked-screen-closeup.jpg"
+              alt="Close-up of a cracked smartphone screen before repair"
+              caption="Cracked screen? We fix it — often same day"
+              className="h-56 md:h-64"
+              sizes="(max-width: 768px) 100vw, 45vw"
+            />
             <div className="glass-panel rounded-2xl p-5">
               <p className="font-semibold">Ready to book?</p>
               <p className="mt-1 text-sm text-muted">Secure your slot online or send a quick WhatsApp message for a quote.</p>
