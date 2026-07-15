@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
+import PhotoTile from "@/components/site/PhotoTile";
 import { siteConfig } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 
@@ -21,6 +22,15 @@ export default function BuySellPage() {
             Stock includes new, refurbished, and pre-owned models.
           </p>
         </div>
+
+        <PhotoTile
+          src="/images/shopinterior2.png"
+          alt="Greenwich Gadgets display cases with phones and gadgets in stock"
+          caption="New, refurbished & pre-owned devices in stock"
+          className="mt-6 h-64 md:h-80"
+          sizes="(max-width: 768px) 100vw, 1100px"
+        />
+
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {[
             ["Bring Device", "We inspect condition, battery, and essential functions."],

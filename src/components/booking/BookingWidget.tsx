@@ -1,123 +1,194 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Wrench, Info } from 'lucide-react';
+import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
+import { Wrench, CheckCircle2, Phone, Smartphone, CalendarDays } from 'lucide-react';
 import { track } from '@vercel/analytics/react';
 import { siteConfig } from '@/content/site';
+import { submitBooking, type BookingState } from '@/lib/booking';
 
-type Step = 'issue' | 'schedule';
+const initialBookingState: BookingState = { ok: false, message: '' };
 
 type BookingWidgetProps = {
+  // Optional pre-selected repair passed via ?issue= on the URL.
   issue?: string;
 };
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-xl bg-brand-red px-6 py-3.5 text-base font-semibold text-white shadow-md transition-all hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      {pending ? 'Sending…' : 'Send Repair Request'}
+    </button>
+  );
+}
+
 export default function BookingWidget({ issue }: BookingWidgetProps) {
-  // When an issue is supplied (e.g. via ?issue= on the URL) we pre-select it and
-  // jump straight to the scheduler; otherwise the customer picks the repair first.
-  const [step, setStep] = useState<Step>(issue ? 'schedule' : 'issue');
-  const [selectedIssue, setSelectedIssue] = useState<string>(issue ?? '');
+  const [state, formAction] = useActionState(submitBooking, initialBookingState);
 
-  // The Google scheduler owns date, time, guest details, the calendar write and
-  // confirmations. We can't pass the repair into the embed, so it's surfaced to
-  // the customer as a note to include in the booking. Fire one analytics event
-  // when the scheduler is opened so we can still measure booking intent.
   useEffect(() => {
-    if (step === 'schedule') {
-      track('booking_scheduler_opened', { issue: selectedIssue || 'not_provided' });
-    }
-  }, [step, selectedIssue]);
+    track('booking_form_opened', { issue: issue || 'not_provided' });
+  }, [issue]);
 
-  const isSchedule = step === 'schedule';
+  useEffect(() => {
+    if (state.ok) {
+      track('booking_request_sent');
+    }
+  }, [state.ok]);
+
+  // Minimum selectable day is today — no point booking a repair in the past.
+  const today = new Date();
+  const minDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+    today.getDate()
+  ).padStart(2, '0')}`;
+
+  if (state.ok) {
+    return (
+      <div className="mx-auto w-full max-w-xl rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-xl">
+        <CheckCircle2 className="mx-auto h-14 w-14 text-green-500" />
+        <h2 className="mt-4 text-2xl font-bold text-black">Request sent</h2>
+        <p className="mt-2 text-gray-600">{state.message}</p>
+        <p className="mt-6 text-sm text-gray-500">
+          Prefer to talk to us now? Call{' '}
+          <a href={siteConfig.contact.phoneHref} className="font-semibold text-brand-red">
+            {siteConfig.contact.phoneDisplay}
+          </a>{' '}
+          or{' '}
+          <a
+            href={siteConfig.contact.whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-brand-red"
+          >
+            message us on WhatsApp
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mx-auto w-full transition-[max-width] ${
-        isSchedule ? 'max-w-3xl' : 'max-w-xl'
-      }`}
-    >
+    <div className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
       {/* Header */}
-      <div className="bg-brand-red p-6 border-b border-brand-red-dark">
-        <h2 className="text-xl font-bold text-white">Book an Appointment</h2>
-        <div className="flex items-center gap-2 mt-4 text-sm font-medium">
-          <span className={step === 'issue' ? 'text-white' : 'text-red-200'}>Repair</span>
-          <ChevronRight className="h-4 w-4 text-red-300" />
-          <span className={step === 'schedule' ? 'text-white' : 'text-red-200'}>Pick a time</span>
+      <div className="border-b border-brand-red-dark bg-brand-red p-6">
+        <h2 className="text-xl font-bold text-white">Book a Repair</h2>
+        <p className="mt-1 text-sm text-red-100">
+          Tell us a few details and we&apos;ll get back to you to confirm.
+        </p>
+      </div>
+
+      <form action={formAction} className="space-y-5 p-6 md:p-8" noValidate>
+        {/* Phone number */}
+        <div>
+          <label htmlFor="phone" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Phone className="h-4 w-4 text-gray-400" /> Your phone number
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            required
+            placeholder="e.g. 07340 327305"
+            aria-invalid={Boolean(state.errors?.phone)}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+          />
+          {state.errors?.phone && (
+            <p className="mt-1 text-sm text-brand-red">{state.errors.phone}</p>
+          )}
         </div>
-      </div>
 
-      <div className="p-6 md:p-8">
-        {/* STEP 1: ISSUE */}
-        {step === 'issue' && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            <h3 className="text-lg font-medium text-black mb-4 flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-gray-400" /> What needs fixing?
-            </h3>
-            <p className="text-sm text-gray-500 mb-2">Choose the repair you would like to book.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {siteConfig.repairIssues.map((option) => {
-                const isSelected = selectedIssue === option;
-                return (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      setSelectedIssue(option);
-                      setStep('schedule');
-                    }}
-                    className={`p-3 rounded-xl border text-left font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${
-                      isSelected
-                        ? 'bg-brand-red border-brand-red text-white shadow-md'
-                        : 'bg-white border-gray-200 text-gray-900 hover:border-red-400 hover:bg-red-50'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {/* Phone brand */}
+        <div>
+          <label htmlFor="brand" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Smartphone className="h-4 w-4 text-gray-400" /> Phone brand
+          </label>
+          <input
+            id="brand"
+            name="brand"
+            type="text"
+            list="phone-brands"
+            required
+            placeholder="e.g. Apple iPhone, Samsung, Google Pixel"
+            aria-invalid={Boolean(state.errors?.brand)}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+          />
+          <datalist id="phone-brands">
+            {siteConfig.phoneBrands.map((b) => (
+              <option key={b} value={b} />
+            ))}
+          </datalist>
+          {state.errors?.brand && (
+            <p className="mt-1 text-sm text-brand-red">{state.errors.brand}</p>
+          )}
+        </div>
+
+        {/* What's broken */}
+        <div>
+          <label htmlFor="issue" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Wrench className="h-4 w-4 text-gray-400" /> What&apos;s broken?
+          </label>
+          <select
+            id="issue"
+            name="issue"
+            required
+            defaultValue={issue && siteConfig.repairIssues.includes(issue) ? issue : ''}
+            aria-invalid={Boolean(state.errors?.issue)}
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+          >
+            <option value="" disabled>
+              Select the issue…
+            </option>
+            {siteConfig.repairIssues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+            <option value="Other">Something else</option>
+          </select>
+          {state.errors?.issue && (
+            <p className="mt-1 text-sm text-brand-red">{state.errors.issue}</p>
+          )}
+        </div>
+
+        {/* Preferred day */}
+        <div>
+          <label htmlFor="day" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
+            <CalendarDays className="h-4 w-4 text-gray-400" /> Day you&apos;d like it fixed
+          </label>
+          <input
+            id="day"
+            name="day"
+            type="date"
+            required
+            min={minDay}
+            aria-invalid={Boolean(state.errors?.day)}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+          />
+          {state.errors?.day && (
+            <p className="mt-1 text-sm text-brand-red">{state.errors.day}</p>
+          )}
+        </div>
+
+        {/* General (non-field) error message */}
+        {!state.ok && state.message && !state.errors && (
+          <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-brand-red" aria-live="polite">
+            {state.message}
+          </p>
         )}
 
-        {/* STEP 2: SCHEDULE (Google Appointment Scheduling embed) */}
-        {step === 'schedule' && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-            {/* Only offer "back" when the repair step is part of this flow. */}
-            {!issue && (
-              <button
-                onClick={() => setStep('issue')}
-                className="text-sm text-gray-500 hover:text-black transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red flex items-center gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" /> Back to Repair
-              </button>
-            )}
+        <SubmitButton />
 
-            {selectedIssue && (
-              <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-red-900">
-                <Info className="h-5 w-5 shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <div className="uppercase tracking-widest text-xs opacity-80 mb-1">Selected repair</div>
-                  <div className="font-semibold">{selectedIssue}</div>
-                  <p className="mt-2 opacity-90">
-                    Please mention <strong>{selectedIssue}</strong> in the notes when you book below so we can prepare for your visit.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <p className="text-sm text-gray-500">
-              Pick a date and time that suits you. You&apos;ll get a confirmation from Google once your booking is complete.
-            </p>
-
-            <div className="overflow-hidden rounded-xl border border-gray-200">
-              <iframe
-                src={siteConfig.bookingScheduleUrl}
-                title="Book an appointment with Greenwich Gadgets"
-                className="w-full h-[680px] border-0"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        )}
-      </div>
+        <p className="text-center text-xs text-gray-400">
+          We only use these details to arrange your repair.
+        </p>
+      </form>
     </div>
   );
 }

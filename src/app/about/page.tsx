@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GlowButton from "@/components/ui/GlowButton";
+import PhotoTile from "@/components/site/PhotoTile";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -23,6 +24,24 @@ export default function AboutPage() {
             pricing, and clear communication.
           </p>
         </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-5">
+          <PhotoTile
+            src="/images/shopexterior.png"
+            alt="Greenwich Gadgets storefront on Greenwich High Road"
+            caption="267 Greenwich High Road"
+            className="h-64 sm:col-span-3 sm:h-80"
+            sizes="(max-width: 640px) 100vw, 45vw"
+          />
+          <PhotoTile
+            src="/images/shopinterior.png"
+            alt="Inside Greenwich Gadgets — accessory wall and displays"
+            caption="Inside the store"
+            className="h-64 sm:col-span-2 sm:h-80"
+            sizes="(max-width: 640px) 100vw, 35vw"
+          />
+        </div>
+
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {[
             ["Honest Advice", "No hard-sell process. We explain options clearly."],
@@ -35,6 +54,14 @@ export default function AboutPage() {
             </article>
           ))}
         </div>
+        <PhotoTile
+          src="/images/repair-tech.jpg"
+          alt="Greenwich Gadgets technician carefully repairing a phone"
+          caption="Careful, expert repairs by our local team"
+          className="mt-8 h-64 md:h-80"
+          sizes="(max-width: 768px) 100vw, 900px"
+        />
+
         <div className="mt-8 flex flex-wrap gap-3">
           <GlowButton href={bookingHref}>Book a Repair</GlowButton>
           <Link
