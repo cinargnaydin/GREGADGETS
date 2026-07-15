@@ -15,7 +15,7 @@ export const siteConfig = {
     phoneHref: "tel:+447340327305",
     phone2Display: "07562 720358",
     phone2Href: "tel:+447562720358",
-    whatsappHref: "https://wa.me/447562720358",
+    whatsappHref: "https://wa.me/447340327305",
     email: "hello@greenwichgadgets.com",
     mapsHref: "https://maps.google.com/?q=267+Greenwich+High+Rd+London+SE10+8NB",
   },
