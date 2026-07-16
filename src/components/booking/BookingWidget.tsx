@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Wrench, CheckCircle2, Phone, Smartphone, CalendarDays } from 'lucide-react';
+import { Wrench, CheckCircle2, Phone, Smartphone, Laptop, CalendarDays } from 'lucide-react';
 import { track } from '@vercel/analytics/react';
 import { siteConfig } from '@/content/site';
 import { submitBooking, type BookingState } from '@/lib/booking';
@@ -29,6 +29,13 @@ function SubmitButton() {
 
 export default function BookingWidget({ issue }: BookingWidgetProps) {
   const [state, formAction] = useActionState(submitBooking, initialBookingState);
+
+  // Device type drives which brand suggestions and repair issues we show.
+  // If the URL pre-selects a phone issue we start on Phone, otherwise default to Phone too.
+  const [deviceType, setDeviceType] = useState<'Phone' | 'Laptop'>('Phone');
+  const isLaptop = deviceType === 'Laptop';
+  const brandSuggestions = isLaptop ? siteConfig.laptopBrands : siteConfig.phoneBrands;
+  const issueOptions = isLaptop ? siteConfig.laptopIssues : siteConfig.repairIssues;
 
   useEffect(() => {
     track('booking_form_opened', { issue: issue || 'not_provided' });
@@ -83,6 +90,34 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
       </div>
 
       <form action={formAction} className="space-y-5 p-6 md:p-8" noValidate>
+        {/* Device type — switches the brand suggestions and repair issues below */}
+        <div>
+          <span className="mb-1.5 block text-sm font-medium text-gray-900">What are we fixing?</span>
+          <div className="grid grid-cols-2 gap-3">
+            {(['Phone', 'Laptop'] as const).map((type) => {
+              const active = deviceType === type;
+              const Icon = type === 'Phone' ? Smartphone : Laptop;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setDeviceType(type)}
+                  aria-pressed={active}
+                  className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${
+                    active
+                      ? 'border-brand-red bg-brand-red text-white'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-brand-red/50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" /> {type}
+                </button>
+              );
+            })}
+          </div>
+          {/* Submitted so the shop knows the device category in the email. */}
+          <input type="hidden" name="device" value={deviceType} />
+        </div>
+
         {/* Phone number */}
         <div>
           <label htmlFor="phone" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
@@ -104,23 +139,32 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
           )}
         </div>
 
-        {/* Phone brand */}
+        {/* Device brand */}
         <div>
           <label htmlFor="brand" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
-            <Smartphone className="h-4 w-4 text-gray-400" /> Phone brand
+            {isLaptop ? (
+              <Laptop className="h-4 w-4 text-gray-400" />
+            ) : (
+              <Smartphone className="h-4 w-4 text-gray-400" />
+            )}{' '}
+            {isLaptop ? 'Laptop brand' : 'Phone brand'}
           </label>
           <input
             id="brand"
             name="brand"
             type="text"
-            list="phone-brands"
+            list="device-brands"
             required
-            placeholder="e.g. Apple iPhone, Samsung, Google Pixel"
+            placeholder={
+              isLaptop
+                ? 'e.g. Apple MacBook, Dell, HP, Lenovo'
+                : 'e.g. Apple iPhone, Samsung, Google Pixel'
+            }
             aria-invalid={Boolean(state.errors?.brand)}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
           />
-          <datalist id="phone-brands">
-            {siteConfig.phoneBrands.map((b) => (
+          <datalist id="device-brands">
+            {brandSuggestions.map((b) => (
               <option key={b} value={b} />
             ))}
           </datalist>
@@ -134,18 +178,20 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
           <label htmlFor="issue" className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900">
             <Wrench className="h-4 w-4 text-gray-400" /> What&apos;s broken?
           </label>
+          {/* Keyed by device type so switching resets the selection to the placeholder. */}
           <select
+            key={deviceType}
             id="issue"
             name="issue"
             required
-            defaultValue={issue && siteConfig.repairIssues.includes(issue) ? issue : ''}
+            defaultValue={!isLaptop && issue && issueOptions.includes(issue) ? issue : ''}
             aria-invalid={Boolean(state.errors?.issue)}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
           >
             <option value="" disabled>
               Select the issue…
             </option>
-            {siteConfig.repairIssues.map((option) => (
+            {issueOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>

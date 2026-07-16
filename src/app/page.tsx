@@ -18,8 +18,8 @@ export const metadata: Metadata = buildMetadata({
 
 const serviceCards = [
   {
-    title: "Phone Repair",
-    text: "Screen, battery, charging port, camera, and water damage support.",
+    title: "Phone & Laptop Repair",
+    text: "Screens, batteries, charging ports, keyboards, upgrades, and water damage.",
     href: "/repair-services",
   },
   {

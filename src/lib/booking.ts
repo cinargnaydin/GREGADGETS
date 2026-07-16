@@ -58,6 +58,8 @@ export async function submitBooking(
   const brand = clean(formData.get('brand'));
   const issue = clean(formData.get('issue'));
   const day = clean(formData.get('day'));
+  // Device type ("Phone" or "Laptop") comes from the booking form's toggle.
+  const device = clean(formData.get('device')) || 'Phone';
 
   // Server-side validation of the four required fields.
   const errors: BookingState['errors'] = {};
@@ -86,11 +88,12 @@ export async function submitBooking(
   const prettyDay = formatDay(day);
   const telHref = `tel:${phone.replace(/[^\d+]/g, '')}`;
 
-  const subject = `New repair request — ${brand} (${issue})`;
+  const subject = `New ${device.toLowerCase()} repair request — ${brand} (${issue})`;
 
   const rows: Array<[string, string]> = [
     ['Phone number', phone],
-    ['Phone brand', brand],
+    ['Device type', device],
+    [`${device} brand`, brand],
     ["What's broken", issue],
     ['Preferred day', prettyDay],
   ];

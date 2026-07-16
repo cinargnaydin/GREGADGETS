@@ -9,7 +9,7 @@ import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = buildMetadata({
   title: "Repair Services | Greenwich Gadgets",
-  description: "Phone repair services in Greenwich with fast turnaround.",
+  description: "Phone and laptop repair services in Greenwich with fast turnaround.",
   path: "/repair-services",
 });
 
@@ -24,19 +24,35 @@ export default function RepairServicesPage() {
             <div className="glass-panel rounded-4xl p-6 md:p-8">
               <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Repair Services</h1>
               <p className="mt-4 text-muted">
-                Fast diagnostics, transparent pricing, and same-day turnaround for most common issues.
-                We confirm quote and timeline before the repair starts.
+                Phone and laptop repairs with fast diagnostics, transparent pricing, and same-day
+                turnaround for most common issues. We confirm quote and timeline before the repair starts.
               </p>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {siteConfig.repairIssues.map((issue) => (
-                <span
-                  key={issue}
-                  className="premium-card rounded-xl px-4 py-3 font-medium"
-                >
-                  {issue}
-                </span>
-              ))}
+
+            <div className="mt-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-red-dark">
+                Phone repairs
+              </h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {siteConfig.repairIssues.map((issue) => (
+                  <span key={issue} className="premium-card rounded-xl px-4 py-3 font-medium">
+                    {issue}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-red-dark">
+                Laptop repairs
+              </h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {siteConfig.laptopIssues.map((issue) => (
+                  <span key={issue} className="premium-card rounded-xl px-4 py-3 font-medium">
+                    {issue}
+                  </span>
+                ))}
+              </div>
             </div>
             <div className="mt-6 grid gap-3">
               {[
@@ -89,14 +105,15 @@ export default function RepairServicesPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "Service",
-          name: "Phone and device repair",
+          name: "Phone and laptop repair",
           provider: {
             "@type": "LocalBusiness",
             name: siteConfig.name,
             url: siteConfig.domain,
           },
           areaServed: "Greenwich, London",
-          serviceType: "Phone repair, battery replacement, charging port repair",
+          serviceType:
+            "Phone repair, laptop repair, battery replacement, charging port repair, screen replacement",
         }}
       />
       <JsonLd

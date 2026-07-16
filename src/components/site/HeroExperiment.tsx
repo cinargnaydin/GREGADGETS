@@ -15,11 +15,11 @@ export default function HeroExperiment() {
               Greenwich High Road - London
             </p>
             <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
-              Same-day phone repair.
+              Same-day phone &amp; laptop repair.
               <span className="block text-black/70">Built for people in a rush.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg text-muted">
-              Screen, battery, charging and water-damage fixes with clear quotes before repair.
+              Screen, battery, charging, keyboard and water-damage fixes with clear quotes before repair.
               Walk in, message on WhatsApp, or book online in under a minute.
             </p>
             <div className="mt-5 flex gap-3">

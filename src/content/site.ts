@@ -39,7 +39,18 @@ export const siteConfig = {
     "Water Damage",
     "Data Transfer",
   ],
-  // Suggestions for the booking form's "Phone brand" field (free text, not a hard list).
+  // Common laptop repairs the shop handles, shown on the repairs page and in booking.
+  laptopIssues: [
+    "Cracked / Faulty Screen",
+    "Battery Replacement",
+    "Keyboard Repair",
+    "Won't Power On",
+    "Slow / Upgrade (SSD/RAM)",
+    "Virus / Software Fix",
+    "Liquid Damage",
+    "Data Recovery",
+  ],
+  // Suggestions for the booking form's device brand field (free text, not a hard list).
   phoneBrands: [
     "Apple iPhone",
     "Samsung",
@@ -51,6 +62,18 @@ export const siteConfig = {
     "Motorola",
     "Nokia",
     "Oppo",
+  ],
+  laptopBrands: [
+    "Apple MacBook",
+    "Dell",
+    "HP",
+    "Lenovo",
+    "Asus",
+    "Acer",
+    "Microsoft Surface",
+    "MSI",
+    "Samsung",
+    "Huawei",
   ],
 };
 
