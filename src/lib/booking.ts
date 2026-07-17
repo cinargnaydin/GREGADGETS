@@ -10,9 +10,45 @@ import { Resend } from 'resend';
 //
 // Only RESEND_API_KEY needs to be set for this to work. The from/to addresses
 // default to the values the shop provided but can be overridden via env if needed.
-const FROM_EMAIL =
-  process.env.BOOKING_FROM_EMAIL || 'Greenwich Gadgets <noreply@greenwichgadgets.com>';
-const TO_EMAIL = process.env.BOOKING_TO_EMAIL || 'greenwichgadgets@gmail.com';
+//
+// IMPORTANT: env values are sanitized before use. Unlike a .env file, the Vercel
+// dashboard does NOT strip surrounding quotes, so a value pasted as
+// "Greenwich Gadgets <noreply@…>" is stored WITH the quotes and reaches us as a
+// malformed `from` field — Resend then rejects the send with a 422 validation
+// error and every booking silently fails. cleanEnvAddress strips wrapping quotes
+// and stray whitespace so that mistake can never break bookings again.
+const DEFAULT_FROM_EMAIL = 'Greenwich Gadgets <noreply@greenwichgadgets.com>';
+const DEFAULT_TO_EMAIL = 'greenwichgadgets@gmail.com';
+
+function cleanEnvAddress(raw: string | undefined): string {
+  if (!raw) return '';
+  return raw.trim().replace(/^["']+|["']+$/g, '').trim();
+}
+
+// Accepts either "email@example.com" or "Name <email@example.com>".
+function isValidFrom(value: string): boolean {
+  return (
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ||
+    /<[^\s@]+@[^\s@]+\.[^\s@]+>$/.test(value)
+  );
+}
+
+function resolveFromEmail(): string {
+  const cleaned = cleanEnvAddress(process.env.BOOKING_FROM_EMAIL);
+  if (!cleaned) return DEFAULT_FROM_EMAIL;
+  if (!isValidFrom(cleaned)) {
+    console.error(
+      `BOOKING_FROM_EMAIL is malformed (${JSON.stringify(
+        process.env.BOOKING_FROM_EMAIL
+      )}); falling back to ${DEFAULT_FROM_EMAIL}.`
+    );
+    return DEFAULT_FROM_EMAIL;
+  }
+  return cleaned;
+}
+
+const FROM_EMAIL = resolveFromEmail();
+const TO_EMAIL = cleanEnvAddress(process.env.BOOKING_TO_EMAIL) || DEFAULT_TO_EMAIL;
 
 export type BookingState = {
   ok: boolean;
