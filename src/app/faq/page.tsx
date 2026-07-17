@@ -10,6 +10,10 @@ const faqs = [
     a: "Many common repairs such as screen or battery replacement are completed the same day.",
   },
   {
+    q: "Do you repair laptops as well as phones?",
+    a: "Yes — we repair both Mac and Windows laptops, including screens, batteries, keyboards, charging issues, SSD/RAM upgrades, liquid damage, data recovery, and software or virus problems.",
+  },
+  {
     q: "Do I need to book before visiting?",
     a: "Walk-ins are welcome, but messaging ahead can speed up diagnostics and quote response.",
   },
