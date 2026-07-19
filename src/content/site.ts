@@ -70,10 +70,7 @@ export const siteConfig = {
     "Lenovo",
     "Asus",
     "Acer",
-    "Microsoft Surface",
-    "MSI",
     "Samsung",
-    "Huawei",
   ],
 };
 
