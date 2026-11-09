@@ -2,12 +2,15 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Wrench, CheckCircle2, Phone, Smartphone, Laptop, CalendarDays } from 'lucide-react';
+import { Wrench, CheckCircle2, Phone, Smartphone, Laptop, CalendarDays, PencilLine } from 'lucide-react';
 import { track } from '@vercel/analytics/react';
 import { siteConfig } from '@/content/site';
 import { submitBooking, type BookingState } from '@/lib/booking';
 
 const initialBookingState: BookingState = { ok: false, message: '' };
+
+// Cap the free-text problem description so the note stays a short summary.
+const NOTE_CHAR_LIMIT = 300;
 
 type BookingWidgetProps = {
   // Optional pre-selected repair passed via ?issue= on the URL.
@@ -34,6 +37,13 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
   // If the URL pre-selects a phone issue we start on Phone, otherwise default to Phone too.
   const [deviceType, setDeviceType] = useState<'Phone' | 'Laptop'>('Phone');
   const isLaptop = deviceType === 'Laptop';
+
+  // Track the chosen issue so we can reveal a free-text note when it's "Other".
+  // Pre-fill from the URL only when it matches an existing phone option (same rule as the select).
+  const [selectedIssue, setSelectedIssue] = useState('');
+  const [note, setNote] = useState('');
+  const showNote = selectedIssue === 'Other';
+  const noteCharCount = note.length;
   const brandSuggestions = isLaptop ? siteConfig.laptopBrands : siteConfig.phoneBrands;
   const issueOptions = isLaptop ? siteConfig.laptopIssues : siteConfig.repairIssues;
 
@@ -101,7 +111,12 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setDeviceType(type)}
+                  onClick={() => {
+                    setDeviceType(type);
+                    // Switching device resets the select (via key), so clear the note too.
+                    setSelectedIssue('');
+                    setNote('');
+                  }}
                   aria-pressed={active}
                   className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${
                     active
@@ -185,6 +200,7 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
             name="issue"
             required
             defaultValue={!isLaptop && issue && issueOptions.includes(issue) ? issue : ''}
+            onChange={(e) => setSelectedIssue(e.target.value)}
             aria-invalid={Boolean(state.errors?.issue)}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
           >
@@ -202,6 +218,46 @@ export default function BookingWidget({ issue }: BookingWidgetProps) {
             <p className="mt-1 text-sm text-brand-red">{state.errors.issue}</p>
           )}
         </div>
+
+        {/* Free-text note — only shown when the customer picks "Something else". */}
+        {showNote && (
+          <div>
+            <label
+              htmlFor="note"
+              className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-900"
+            >
+              <PencilLine className="h-4 w-4 text-gray-400" /> Tell us what&apos;s wrong
+            </label>
+            <textarea
+              id="note"
+              name="note"
+              rows={4}
+              required
+              maxLength={NOTE_CHAR_LIMIT}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Describe the problem with your device — what happens, when it started, anything you've tried."
+              aria-invalid={Boolean(state.errors?.note)}
+              aria-describedby="note-count"
+              className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+            />
+            <div className="mt-1 flex items-center justify-between">
+              {state.errors?.note ? (
+                <p className="text-sm text-brand-red">{state.errors.note}</p>
+              ) : (
+                <span />
+              )}
+              <span
+                id="note-count"
+                className={`text-xs ${
+                  noteCharCount >= NOTE_CHAR_LIMIT ? 'text-brand-red' : 'text-gray-400'
+                }`}
+              >
+                {noteCharCount}/{NOTE_CHAR_LIMIT} characters
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Preferred day */}
         <div>

@@ -54,8 +54,11 @@ export type BookingState = {
   ok: boolean;
   message: string;
   // Field-level errors keyed by input name, used to highlight the form.
-  errors?: Partial<Record<'phone' | 'brand' | 'issue' | 'day', string>>;
+  errors?: Partial<Record<'phone' | 'brand' | 'issue' | 'day' | 'note', string>>;
 };
+
+// Keep the free-text note in step with the form's client-side cap.
+const NOTE_CHAR_LIMIT = 300;
 
 function clean(value: FormDataEntryValue | null): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -96,12 +99,18 @@ export async function submitBooking(
   const day = clean(formData.get('day'));
   // Device type ("Phone" or "Laptop") comes from the booking form's toggle.
   const device = clean(formData.get('device')) || 'Phone';
+  // Free-text problem description — only relevant when the issue is "Other".
+  // Capped to NOTE_CHAR_LIMIT characters to match the form and keep emails tidy.
+  const note = clean(formData.get('note')).slice(0, NOTE_CHAR_LIMIT);
 
   // Server-side validation of the four required fields.
   const errors: BookingState['errors'] = {};
   if (!phone) errors.phone = 'Please enter a phone number so we can reach you.';
   if (!brand) errors.brand = 'Please tell us the phone brand.';
   if (!issue) errors.issue = 'Please tell us what needs fixing.';
+  if (issue === 'Other' && !note) {
+    errors.note = 'Please describe the problem with your device.';
+  }
   if (!day) errors.day = 'Please choose a day you would like it fixed.';
 
   if (Object.keys(errors).length > 0) {
@@ -131,6 +140,8 @@ export async function submitBooking(
     ['Device type', device],
     [`${device} brand`, brand],
     ["What's broken", issue],
+    // Include the customer's own description when they picked "Something else".
+    ...(note ? [['Their description', note] as [string, string]] : []),
     ['Preferred day', prettyDay],
   ];
 
